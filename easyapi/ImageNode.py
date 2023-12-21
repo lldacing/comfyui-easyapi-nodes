@@ -8,7 +8,7 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
-from util import tensor_to_pil
+from easyapi.util import tensor_to_pil
 
 class Base64ToImage:
     @classmethod

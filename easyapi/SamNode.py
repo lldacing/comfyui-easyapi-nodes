@@ -2,7 +2,7 @@ from segment_anything import SamAutomaticMaskGenerator
 import json
 import numpy as np
 
-from util import tensor_to_pil
+from easyapi.util import tensor_to_pil
 
 class SamAutoMaskSEGS:
     @classmethod
