@@ -10,7 +10,7 @@ import { api } from "/scripts/api.js";
     },
 });*/
 api.addEventListener("executed", ({detail}) => {
-    const images = detail?.output?.base64images;
+    const images = detail?.output?.base64Images;
     if (!images) return;
     const currentNode = app.graph._nodes_by_id[detail.node];
     // console.log(currentNode.imgs)

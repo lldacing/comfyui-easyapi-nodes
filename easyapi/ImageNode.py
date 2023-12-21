@@ -99,7 +99,7 @@ class ImageToBase64:
             result.append(encoded_image)
         base64Images = JSONEncoder().encode(result)
         # print(images)
-        return {"ui": {"base64images": result}, "result": (base64Images,)}
+        return {"ui": {"base64Images": result}, "result": (base64Images,)}
 
 
 class LoadImageToBase64(LoadImage):
