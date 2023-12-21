@@ -9,7 +9,7 @@ NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
 py = os.path.join(extension_folder, 'easyapi')
-sys.path.append(py)
+sys.path.append(extension_folder)
 
 def loadCustomNodes():
     files = glob.glob(os.path.join(py, "*Node.py"), recursive=True)
