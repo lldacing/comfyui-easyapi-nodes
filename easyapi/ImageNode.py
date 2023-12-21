@@ -1,6 +1,5 @@
 import base64
 import io
-
 import numpy as np
 import torch
 from PIL import ImageOps, Image
@@ -9,6 +8,7 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
+from util import tensor_to_pil
 
 class Base64ToImage:
     @classmethod
@@ -23,7 +23,7 @@ class Base64ToImage:
 
     FUNCTION = "convert"
 
-    CATEGORY = "easyapi/image"
+    CATEGORY = "EasyApi/Image"
 
     # INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (True, False)
@@ -67,7 +67,7 @@ class ImageToBase64:
     # ui中是websocket返回给前端的内容，result是py执行传给下个节点用的
     OUTPUT_NODE = True
 
-    CATEGORY = "easyapi/image"
+    CATEGORY = "EasyApi/Image"
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False,False,)
@@ -110,7 +110,7 @@ class LoadImageToBase64(LoadImage):
     FUNCTION = "convert"
     OUTPUT_NODE = True
 
-    CATEGORY = "easyapi/image"
+    CATEGORY = "EasyApi/Image"
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False,False,)
@@ -131,16 +131,6 @@ class LoadImageToBase64(LoadImage):
         # 将图像数据编码为Base64字符串
         encoded_image = "[\"data:image/png;base64," + base64.b64encode(image_data_bytes).decode('utf-8') + "\"]"
         return encoded_image, img, mask
-
-
-# Tensor to PIL
-def tensor_to_pil(image):
-    return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
-
-
-# Convert PIL to Tensor
-def pil_2_tensor(image):
-    return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
 
 def base64_to_image(base64_string):
