@@ -10,7 +10,7 @@ const style = `
    position: absolute;
    top: 0;
    bottom: 0;
-   right: 0;
+   left: 0;
    font-size: 12px;
    display: flex;
    align-items: center;
@@ -24,6 +24,9 @@ const style = `
 .easyapi-workflow-arrow:hover {
    filter: brightness(1.6);
    background-color: var(--comfy-menu-bg);
+}
+.easyapi-save-popup,.easyapi-dev-save-api-popup {
+   border-radius: 6px;
 }
 
 `;
@@ -47,6 +50,27 @@ class EasyApiWorkflows {
 			}
 			return output
 		}
+		function copyToClipboard(text) {
+			if (navigator.clipboard) {
+				// clipboard api 复制
+				navigator.clipboard.writeText(text);
+			} else {
+				const textarea = document.createElement('textarea');
+				document.body.appendChild(textarea);
+				// 隐藏此输入框
+				textarea.style.position = 'fixed';
+				textarea.style.clip = 'rect(0 0 0 0)';
+				textarea.style.top = '10px';
+				// 赋值
+				textarea.value = text;
+				// 选中
+				textarea.select();
+				// 复制
+				document.execCommand('copy', true);
+				// 移除输入框
+				document.body.removeChild(textarea);
+			}
+		}
 		function addWorkflowMenu(type, getOptions) {
 			return $el("div.easyapi-workflow-arrow", {
 				parent: document.getElementById(`comfy-${type}-button`),
@@ -62,6 +86,7 @@ class EasyApiWorkflows {
 							scale: 1.3,
 						}
 					);
+					menu.root.classList.add(`easyapi-${type}-popup`);
 				},
 			});
 		}
@@ -102,6 +127,32 @@ class EasyApiWorkflows {
 								a.remove();
 								window.URL.revokeObjectURL(url);
 							}, 0);
+						});
+					},
+				},
+				{
+					title: "Copy EasyApi",
+					callback: async () => {
+						app.graphToPrompt().then(p => {
+							const apiObj = p.output;
+							const newApiObj = replaceImageNode(apiObj)
+							const json = JSON.stringify(newApiObj, null, null); // convert the data to a JSON string
+							copyToClipboard(json);
+							alert("Copied")
+						});
+					},
+				},
+			];
+		});
+		addWorkflowMenu("save", () => {
+			return [
+				{
+					title: "Copy workflow",
+					callback: async () => {
+						app.graphToPrompt().then(p => {
+							const json = JSON.stringify(app.graph.serialize(), null, null); // convert the data to a JSON string
+							copyToClipboard(json);
+							alert("Copied")
 						});
 					},
 				},
