@@ -1,7 +1,7 @@
 # comfyui-easyapi-nodes
 针对api接口开发补充的一些自定义节点和功能。
 
-转成base64的节点都是输出节点，websocket消息中会包含base64Images和base64Type属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
+转成base64的节点都是输出节点，websocket消息中会包含base64Images和imageType属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
 
 ## 节点
 | 名称                    | 说明                                                                                                                                                         |
