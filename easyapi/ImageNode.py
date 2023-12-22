@@ -10,6 +10,7 @@ import json
 from json import JSONEncoder, JSONDecoder
 from easyapi.util import tensor_to_pil
 
+
 class Base64ToImage:
     @classmethod
     def INPUT_TYPES(self):
@@ -50,11 +51,15 @@ class Base64ToImage:
         # return (torch.stack(images, dim=0)[None, ], mask.unsqueeze(0))
 
 
-class ImageToBase64:
+class ImageToBase64Advanced:
+    def __init__(self):
+        self.imageType = "image"
+
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
             "images": ("IMAGE",),
+            "imageType": (["image", "mask"], {"default": "image"}),
         },
             "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
         }
@@ -72,7 +77,10 @@ class ImageToBase64:
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False,False,)
 
-    def convert(self, images, prompt=None, extra_pnginfo=None):
+    def convert(self, images, imageType=None, prompt=None, extra_pnginfo=None):
+        if imageType is None:
+            imageType = self.imageType
+
         result = list()
         for i in images:
             img = tensor_to_pil(i)
@@ -99,11 +107,47 @@ class ImageToBase64:
             result.append(encoded_image)
         base64Images = JSONEncoder().encode(result)
         # print(images)
-        return {"ui": {"base64Images": result}, "result": (base64Images,)}
+        return {"ui": {"base64Images": result, "imageType": [imageType]}, "result": (base64Images,)}
+
+
+class ImageToBase64(ImageToBase64Advanced):
+    def __init__(self):
+        self.imageType = "image"
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {"required": {
+            "images": ("IMAGE",),
+        },
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+        }
+
+
+class MaskImageToBase64(ImageToBase64):
+    def __init__(self):
+        self.imageType = "mask"
+
+
+class MaskToBase64Image(MaskImageToBase64):
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                "required": {
+                    "mask": ("MASK",),
+                }
+        }
+
+    CATEGORY = "EasyApi/Image"
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "mask_to_base64image"
+
+    def mask_to_base64image(self, mask):
+        images = mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])).movedim(1, -1).expand(-1, -1, -1, 3)
+        return super().convert(images)
 
 
 class LoadImageToBase64(LoadImage):
-
     RETURN_TYPES = ("STRING", "IMAGE", "MASK", )
     RETURN_NAMES = ("base64Images", "IMAGE", "MASK", )
 
@@ -152,6 +196,9 @@ def base64_to_image(base64_string):
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "ImageToBase64": ImageToBase64,
+    "ImageToBase64Advanced": ImageToBase64Advanced,
+    "MaskToBase64Image": MaskToBase64Image,
+    "MaskImageToBase64": MaskImageToBase64,
     "LoadImageToBase64": LoadImageToBase64,
 }
 
@@ -159,5 +206,8 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Base64ToImage": "Base64 To Image",
     "ImageToBase64": "Image To Base64",
+    "ImageToBase64Advanced": "Image To Base64 (Advanced)",
+    "MaskToBase64Image": "Mask To Base64 Image",
+    "MaskImageToBase64": "Mask Image To Base64",
     "LoadImageToBase64": "Load Image To Base64",
 }
