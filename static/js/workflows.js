@@ -46,6 +46,9 @@ class EasyApiWorkflows {
 					}
 				} else if (node.class_type == "PreviewImage" || node.class_type == "SaveImage") {
 					output[o].class_type = "ImageToBase64";
+					output[o].inputs = {
+						"images": node.inputs.images
+					}
 				}
 			}
 			return output
