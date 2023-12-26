@@ -74,6 +74,11 @@ class EasyApiWorkflows {
 				document.body.removeChild(textarea);
 			}
 		}
+
+		function showTip(tips) {
+			app.ui.dialog.show(tips);
+			setTimeout(() => app.ui.dialog.close(), 500);
+		}
 		function addWorkflowMenu(type, getOptions) {
 			return $el("div.easyapi-workflow-arrow", {
 				parent: document.getElementById(`comfy-${type}-button`),
@@ -101,6 +106,17 @@ class EasyApiWorkflows {
 					callback: () => {
 						const orgSaveApiBtn = document.getElementById('comfy-dev-save-api-button');
 						orgSaveApiBtn.click();
+					},
+				},
+				{
+					title: "Copy Api",
+					callback: async () => {
+						app.graphToPrompt().then(p => {
+							const apiObj = p.output;
+							const json = JSON.stringify(apiObj, null, null);
+							copyToClipboard(json);
+							showTip("Copied")
+						});
 					},
 				},
 				{
@@ -141,7 +157,7 @@ class EasyApiWorkflows {
 							const newApiObj = replaceImageNode(apiObj)
 							const json = JSON.stringify(newApiObj, null, null); // convert the data to a JSON string
 							copyToClipboard(json);
-							alert("Copied")
+							showTip("Copied")
 						});
 					},
 				},
@@ -155,7 +171,7 @@ class EasyApiWorkflows {
 						app.graphToPrompt().then(p => {
 							const json = JSON.stringify(app.graph.serialize(), null, null); // convert the data to a JSON string
 							copyToClipboard(json);
-							alert("Copied")
+							showTip("Copied")
 						});
 					},
 				},

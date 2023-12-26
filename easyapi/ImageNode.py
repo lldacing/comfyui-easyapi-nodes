@@ -143,8 +143,39 @@ class MaskToBase64Image(MaskImageToBase64):
     FUNCTION = "mask_to_base64image"
 
     def mask_to_base64image(self, mask):
+        """将一个二维的掩码张量扩展为一个四维的彩色图像张量。具体的步骤如下：
+
+        第一行，使用 torch.reshape 函数，将掩码张量的形状改变为(-1, 1, mask.shape[-2], mask.shape[-1])，
+        其中 - 1 表示自动推断该维度的大小，1 表示增加一个新的维度，mask.shape[-2] 和 mask.shape[-1] 表示保持原来的最后两个维度不变。
+        这样，掩码张量就变成了一个四维的张量，其中第二个维度只有一个通道。
+
+        第二行，使用 torch.movedim 函数，将掩码张量的第二个维度（通道维度）移动到最后一个维度的位置，即将形状为(-1, 1, mask.shape[-2], mask.shape[-1])
+        的张量变为(-1, mask.shape[-2], mask.shape[-1], 1) 的张量。这样，掩码张量就变成了一个符合图像格式的张量，其中最后一个维度表示通道数。
+
+        第三行，使用 torch.Tensor.expand 函数，将掩码张量的最后一个维度（通道维度）扩展为 3，即将形状为(-1, mask.shape[-2], mask.shape[-1], 1) 的张量变为(-1, mask.shape[-2], mask.shape[-1], 3) 的张量。这样，掩码张量就变成了一个彩色图像张量，其中最后一个维度表示红、绿、蓝三个通道。
+
+        这段代码的结果是一个与原来的掩码张量相同元素的彩色图像张量，表示掩码的颜色
+        """
         images = mask.reshape((-1, 1, mask.shape[-2], mask.shape[-1])).movedim(1, -1).expand(-1, -1, -1, 3)
         return super().convert(images)
+
+
+class MaskToBase64(MaskImageToBase64):
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+                "required": {
+                    "mask": ("MASK",),
+                }
+        }
+
+    CATEGORY = "EasyApi/Image"
+
+    RETURN_TYPES = ("STRING",)
+    FUNCTION = "mask_to_base64image"
+
+    def mask_to_base64image(self, mask):
+        return super().convert(mask)
 
 
 class LoadImageToBase64(LoadImage):
@@ -196,6 +227,7 @@ def base64_to_image(base64_string):
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "ImageToBase64": ImageToBase64,
+    # "MaskToBase64": MaskToBase64,
     "ImageToBase64Advanced": ImageToBase64Advanced,
     "MaskToBase64Image": MaskToBase64Image,
     "MaskImageToBase64": MaskImageToBase64,
@@ -206,6 +238,7 @@ NODE_CLASS_MAPPINGS = {
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Base64ToImage": "Base64 To Image",
     "ImageToBase64": "Image To Base64",
+    # "MaskToBase64": "Mask To Base64",
     "ImageToBase64Advanced": "Image To Base64 (Advanced)",
     "MaskToBase64Image": "Mask To Base64 Image",
     "MaskImageToBase64": "Mask Image To Base64",
