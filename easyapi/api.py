@@ -7,7 +7,7 @@ import execution
 extension_folder = os.path.dirname(os.path.realpath(__file__))
 
 
-def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE):
+def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE, isStart=False):
     configDataFilePath = os.path.join(extension_folder, 'config')
     if not os.path.exists(configDataFilePath):
         os.mkdir(configDataFilePath)
@@ -22,7 +22,8 @@ def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE):
         else:
             with open(configFile, 'r+', encoding="UTF-8") as file:
                 data = json.load(file)
-                data['history_max_size'] = max_size
+                if not isStart:
+                    data['history_max_size'] = max_size
 
             with open(configFile, 'w+', encoding="UTF-8") as file:
                 json.dump(data, file, indent=2)
@@ -63,6 +64,6 @@ def register_routes():
 
 
 def init():
-    reset_history_size()
+    reset_history_size(isStart=True)
     register_routes()
 
