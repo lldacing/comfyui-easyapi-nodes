@@ -12,6 +12,9 @@ from easyapi.util import tensor_to_pil
 
 
 class Base64ToImage:
+    """
+    图片的base64格式还原成图片的张量
+    """
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
@@ -178,6 +181,45 @@ class MaskToBase64(MaskImageToBase64):
         return super().convert(mask)
 
 
+class Base64ToMask:
+    """
+    mask的base64图片还原成mask的张量
+    """
+    _color_channels = ["red", "green", "blue", "alpha"]
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "base64Images": ("STRING", {"forceInput": True}),
+                "channel": (s._color_channels, {"default": s._color_channels[0]}), }
+        }
+
+    CATEGORY = "EasyApi/Image"
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "base64image_to_mask"
+
+    def base64image_to_mask(self, base64Images, channel=_color_channels[0]):
+        base64ImageJson = JSONDecoder().decode(s=base64Images)
+        for base64Image in base64ImageJson:
+            i = base64_to_image(base64Image)
+            # 下面代码参考LoadImage
+            i = ImageOps.exif_transpose(i)
+            if i.getbands() != ("R", "G", "B", "A"):
+                i = i.convert("RGBA")
+            mask = None
+            c = channel[0].upper()
+            if c in i.getbands():
+                mask = np.array(i.getchannel(c)).astype(np.float32) / 255.0
+                mask = torch.from_numpy(mask)
+                if c == 'A':
+                    mask = 1. - mask
+            else:
+                mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
+
+        return (mask.unsqueeze(0),)
+
+
 class LoadImageToBase64(LoadImage):
     RETURN_TYPES = ("STRING", "IMAGE", "MASK", )
     RETURN_NAMES = ("base64Images", "IMAGE", "MASK", )
@@ -228,6 +270,7 @@ NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "ImageToBase64": ImageToBase64,
     # "MaskToBase64": MaskToBase64,
+    "Base64ToMask": Base64ToMask,
     "ImageToBase64Advanced": ImageToBase64Advanced,
     "MaskToBase64Image": MaskToBase64Image,
     "MaskImageToBase64": MaskImageToBase64,
@@ -239,6 +282,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "Base64ToImage": "Base64 To Image",
     "ImageToBase64": "Image To Base64",
     # "MaskToBase64": "Mask To Base64",
+    "Base64ToMask": "Base64 To Mask",
     "ImageToBase64Advanced": "Image To Base64 (Advanced)",
     "MaskToBase64Image": "Mask To Base64 Image",
     "MaskImageToBase64": "Mask Image To Base64",

@@ -49,6 +49,12 @@ class EasyApiWorkflows {
 					output[o].inputs = {
 						"images": node.inputs.images
 					}
+				} else if (node.class_type == "LoadImageMask") {
+					output[o].class_type = "Base64ToMask";
+					output[o].inputs = {
+						"base64Images":"",
+						"channel": "red"
+					}
 				}
 			}
 			return output
