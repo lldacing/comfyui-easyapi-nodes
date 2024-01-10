@@ -56,6 +56,7 @@ class EasyApiWorkflows {
 						"channel": "red"
 					}
 				}
+				delete output[o]['_meta']
 			}
 			return output
 		}

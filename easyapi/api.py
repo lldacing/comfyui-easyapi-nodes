@@ -108,8 +108,8 @@ def register_routes():
         prompt_id = json_data["prompt_id"]
         current_queue = PromptServer.instance.prompt_queue.get_current_queue()
         queue_running = current_queue[0]
-        if queue_running is not None:
-            if queue_running[1] == prompt_id:
+        if queue_running is not None and len(queue_running) > 0:
+            if len(queue_running[0]) > 0 and queue_running[0][1] == prompt_id:
                 nodes.interrupt_processing()
 
         delete_func = lambda a: a[1] == prompt_id
