@@ -2,6 +2,8 @@ import sys
 
 from datetime import datetime as dt
 
+from server import PromptServer
+
 old_stdout = sys.stdout
 old_stderr = sys.stderr
 
@@ -38,6 +40,19 @@ class StdTimeFilter:
             old_stderr.flush()
 
 
+def socket_wrap(func):
+    def wrap_func(event, data, sid=None):
+        if event == "executed" or event == "executing":
+            print("send message begin, type={}, node={}".format(event, data['node']))
+        else:
+            print("send message begin, {}".format(event))
+        func(event, data, sid)
+        print("send message end, {}".format(event))
+    return wrap_func
+
+
 def log_wrap():
     sys.stdout = StdTimeFilter(True)
     sys.stderr = StdTimeFilter(False)
+    # old_send_sync = PromptServer.instance.send_sync
+    # PromptServer.instance.send_sync = socket_wrap(old_send_sync)

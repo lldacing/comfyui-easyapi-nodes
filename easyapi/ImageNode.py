@@ -94,6 +94,10 @@ class ImageToBase64Advanced:
             if not args.disable_metadata:
                 metadata = PngInfo()
                 if prompt is not None:
+                    for idx in prompt:
+                        node = prompt[idx]
+                        if node['class_type'] == 'Base64ToImage' or node['class_type'] == 'Base64ToMask':
+                            node['inputs']['base64Images'] = ""
                     metadata.add_text("prompt", json.dumps(prompt))
                 if extra_pnginfo is not None:
                     for x in extra_pnginfo:
