@@ -1,12 +1,23 @@
 import os
 import json
 
+import folder_paths
 import nodes
 from server import PromptServer
 from aiohttp import web
 import execution
+from simple_lama_inpainting import SimpleLama
+from .util import image_to_base64, base64_to_image
 
 extension_folder = os.path.dirname(os.path.realpath(__file__))
+
+simple_lama = None
+lama_model_path = os.path.join(folder_paths.models_dir, "lama/big-lama.pt")
+if not os.path.exists(lama_model_path):
+    os.environ['LAMA_MODEL'] = ''
+    print(f"## lama model not found: {lama_model_path}, pls download from https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0.1.0/big-lama.pt")
+else:
+    os.environ['LAMA_MODEL'] = lama_model_path
 
 
 def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE, isStart=False):
@@ -115,6 +126,29 @@ def register_routes():
         delete_func = lambda a: a[1] == prompt_id
         PromptServer.instance.prompt_queue.delete_queue_item(delete_func)
         return web.Response(status=200)
+
+    @PromptServer.instance.routes.post("/easyapi/lama_cleaner")
+    async def lama_cleaner(request):
+        json_data = await request.json()
+        image = json_data["image"]
+        mask = json_data["mask"]
+        if image is None or mask is None:
+            return web.json_response({"error": "missing required params"}, status=400)
+
+        global simple_lama
+        if simple_lama is None:
+            simple_lama = SimpleLama()
+
+        image = base64_to_image(image)
+        mask = base64_to_image(mask)
+        mask = mask.convert('L')
+
+        res = simple_lama(image, mask)
+
+        encoded_image = image_to_base64(res)
+
+        response = {"base64Image": encoded_image}
+        return web.json_response(response, status=200)
 
 
 def init():

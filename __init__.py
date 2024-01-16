@@ -15,6 +15,7 @@ sys.path.append(extension_folder)
 logScript.log_wrap()
 api.init()
 
+
 def loadCustomNodes():
     files = glob.glob(os.path.join(pyPath, "*Node.py"), recursive=True)
     for file in files:

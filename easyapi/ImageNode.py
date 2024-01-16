@@ -8,7 +8,7 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
-from easyapi.util import tensor_to_pil
+from easyapi.util import tensor_to_pil, base64_to_image, image_to_base64
 
 
 class Base64ToImage:
@@ -87,9 +87,6 @@ class ImageToBase64Advanced:
         result = list()
         for i in images:
             img = tensor_to_pil(i)
-
-            # 创建一个BytesIO对象，用于临时存储图像数据
-            image_data = io.BytesIO()
             metadata = None
             if not args.disable_metadata:
                 metadata = PngInfo()
@@ -103,14 +100,8 @@ class ImageToBase64Advanced:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
-            # 将图像保存到BytesIO对象中，格式为PNG
-            img.save(image_data, format='PNG', pnginfo=metadata)
-
-            # 将BytesIO对象的内容转换为字节串
-            image_data_bytes = image_data.getvalue()
-
             # 将图像数据编码为Base64字符串
-            encoded_image = "data:image/png;base64," + base64.b64encode(image_data_bytes).decode('utf-8')
+            encoded_image = image_to_base64(img, pnginfo=metadata)
             result.append(encoded_image)
         base64Images = JSONEncoder().encode(result)
         # print(images)
@@ -252,22 +243,6 @@ class LoadImageToBase64(LoadImage):
         # 将图像数据编码为Base64字符串
         encoded_image = "[\"data:image/png;base64," + base64.b64encode(image_data_bytes).decode('utf-8') + "\"]"
         return encoded_image, img, mask
-
-
-def base64_to_image(base64_string):
-    # 去除前缀
-    prefix, base64_data = base64_string.split(",", 1)
-
-    # 从base64字符串中解码图像数据
-    image_data = base64.b64decode(base64_data)
-
-    # 创建一个内存流对象
-    image_stream = io.BytesIO(image_data)
-
-    # 使用PIL的Image模块打开图像数据
-    image = Image.open(image_stream)
-
-    return image
 
 
 NODE_CLASS_MAPPINGS = {
