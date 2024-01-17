@@ -9,7 +9,46 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
-from easyapi.util import tensor_to_pil, base64_to_image, image_to_base64
+from easyapi.util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url
+
+
+class LoadImageFromUrl:
+    """
+    从远程地址读取图片
+    """
+    @classmethod
+    def INPUT_TYPES(self):
+        return {"required": {
+            "url": ("STRING", {"multiline": True, "default": "", "dynamicPrompts": False}),
+        },
+        }
+
+    RETURN_TYPES = ("IMAGE", "MASK")
+    # RETURN_NAMES = ("image", "mask")
+
+    FUNCTION = "convert"
+
+    CATEGORY = "EasyApi/Image"
+
+    # INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (True, True,)
+
+    def convert(self, url):
+        i = read_image_from_url(url)
+        i = ImageOps.exif_transpose(i)
+        image = i.convert("RGB")
+        image = pil_to_tensor(image)
+        images = []
+        images.append(image)
+        masks = []
+        if 'A' in i.getbands():
+            mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+            mask = 1. - torch.from_numpy(mask)
+        else:
+            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+
+        masks.append(mask)
+        return (images, masks, )
 
 
 class Base64ToImage:
@@ -19,11 +58,11 @@ class Base64ToImage:
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
-            "base64Images": ("STRING", {"forceInput": True}),
+            "base64Images": ("STRING", {"multiline": True, "default": "[\"\"]", "dynamicPrompts": False}),
         },
         }
 
-    RETURN_TYPES = ("IMAGE",)
+    RETURN_TYPES = ("IMAGE", "MASK")
     # RETURN_NAMES = ("image", "mask")
 
     FUNCTION = "convert"
@@ -31,12 +70,13 @@ class Base64ToImage:
     CATEGORY = "EasyApi/Image"
 
     # INPUT_IS_LIST = False
-    OUTPUT_IS_LIST = (True, False)
+    OUTPUT_IS_LIST = (True, True)
 
     def convert(self, base64Images):
         # print(base64Image)
         base64ImageJson = JSONDecoder().decode(s=base64Images)
         images = []
+        masks = []
         for base64Image in base64ImageJson:
             i = base64_to_image(base64Image)
             # 下面代码参考LoadImage
@@ -44,15 +84,15 @@ class Base64ToImage:
             image = i.convert("RGB")
             image = np.array(image).astype(np.float32) / 255.0
             image = torch.from_numpy(image)[None, ]
-            # if 'A' in i.getbands():
-            #     mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-            #     mask = 1. - torch.from_numpy(mask)
-            # else:
-            #     mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+            if 'A' in i.getbands():
+                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                mask = 1. - torch.from_numpy(mask)
+            else:
+                mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
             images.append(image)
+            masks.append(mask.unsqueeze(0))
 
-        return torch.stack(images, dim=0)[None, ]
-        # return (torch.stack(images, dim=0)[None, ], mask.unsqueeze(0))
+        return (images, masks,)
 
 
 class ImageToBase64Advanced:
@@ -187,7 +227,8 @@ class Base64ToMask:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "base64Images": ("STRING", {"forceInput": True}),
+                # "base64Images": ("STRING", {"forceInput": True}),
+                "base64Images": ("STRING", {"multiline": True, "default": "[\"\"]", "dynamicPrompts": False}),
                 "channel": (s._color_channels, {"default": s._color_channels[0]}), }
         }
 
@@ -249,6 +290,7 @@ class LoadImageToBase64(LoadImage):
 
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
+    "LoadImageFromUrl": LoadImageFromUrl,
     "ImageToBase64": ImageToBase64,
     # "MaskToBase64": MaskToBase64,
     "Base64ToMask": Base64ToMask,
@@ -261,6 +303,7 @@ NODE_CLASS_MAPPINGS = {
 # A dictionary that contains the friendly/humanly readable titles for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Base64ToImage": "Base64 To Image",
+    "LoadImageFromUrl": "Load Image From Url",
     "ImageToBase64": "Image To Base64",
     # "MaskToBase64": "Mask To Base64",
     "Base64ToMask": "Base64 To Mask",

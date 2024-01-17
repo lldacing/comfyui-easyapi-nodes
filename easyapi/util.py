@@ -2,6 +2,7 @@ import base64
 import io
 
 import numpy as np
+import requests
 import torch
 from PIL import Image
 
@@ -12,7 +13,7 @@ def tensor_to_pil(image):
 
 
 # Convert PIL to Tensor
-def pil_2_tensor(image):
+def pil_to_tensor(image):
     return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
 
 
@@ -50,3 +51,10 @@ def image_to_base64(pli_image, pnginfo=None):
     encoded_image = "data:image/png;base64," + base64.b64encode(image_data_bytes).decode('utf-8')
 
     return encoded_image
+
+
+def read_image_from_url(image_url):
+    response = requests.get(image_url)
+    img = Image.open(io.BytesIO(response.content))
+    return img
+
