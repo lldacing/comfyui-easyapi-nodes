@@ -12,12 +12,14 @@ from .util import image_to_base64, base64_to_image
 extension_folder = os.path.dirname(os.path.realpath(__file__))
 
 simple_lama = None
-lama_model_path = os.path.join(folder_paths.models_dir, "lama/big-lama.pt")
+lama_model_dir = os.path.join(folder_paths.models_dir, "lama")
+lama_model_path = os.path.join(lama_model_dir, "big-lama.pt")
 if not os.path.exists(lama_model_path):
-    os.environ['LAMA_MODEL'] = ''
+    os.environ['LAMA_MODEL'] = lama_model_path
     print(f"## lama model not found: {lama_model_path}, pls download from https://github.com/enesmsahin/simple-lama-inpainting/releases/download/v0.1.0/big-lama.pt")
 else:
     os.environ['LAMA_MODEL'] = lama_model_path
+os.makedirs(lama_model_dir, exist_ok=True)
 
 
 def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE, isStart=False):
