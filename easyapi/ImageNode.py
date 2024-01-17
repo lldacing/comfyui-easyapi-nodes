@@ -1,4 +1,5 @@
 import base64
+import copy
 import io
 import numpy as np
 import torch
@@ -91,11 +92,12 @@ class ImageToBase64Advanced:
             if not args.disable_metadata:
                 metadata = PngInfo()
                 if prompt is not None:
-                    for idx in prompt:
-                        node = prompt[idx]
+                    newPrompt = copy.deepcopy(prompt)
+                    for idx in newPrompt:
+                        node = newPrompt[idx]
                         if node['class_type'] == 'Base64ToImage' or node['class_type'] == 'Base64ToMask':
                             node['inputs']['base64Images'] = ""
-                    metadata.add_text("prompt", json.dumps(prompt))
+                    metadata.add_text("prompt", json.dumps(newPrompt))
                 if extra_pnginfo is not None:
                     for x in extra_pnginfo:
                         metadata.add_text(x, json.dumps(extra_pnginfo[x]))
