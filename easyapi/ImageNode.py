@@ -12,19 +12,19 @@ from json import JSONEncoder, JSONDecoder
 from easyapi.util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url
 
 
-class LoadImageFromUrl:
+class LoadImageFromURL:
     """
     从远程地址读取图片
     """
     @classmethod
     def INPUT_TYPES(self):
         return {"required": {
-            "url": ("STRING", {"multiline": True, "default": "", "dynamicPrompts": False}),
+            "urls": ("STRING", {"multiline": True, "default": "", "dynamicPrompts": False}),
         },
         }
 
     RETURN_TYPES = ("IMAGE", "MASK")
-    # RETURN_NAMES = ("image", "mask")
+    RETURN_NAMES = ("images", "masks")
 
     FUNCTION = "convert"
 
@@ -33,22 +33,72 @@ class LoadImageFromUrl:
     # INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (True, True,)
 
-    def convert(self, url):
-        i = read_image_from_url(url)
-        i = ImageOps.exif_transpose(i)
-        image = i.convert("RGB")
-        image = pil_to_tensor(image)
+    def convert(self, urls):
+        urls = urls.splitlines()
         images = []
-        images.append(image)
         masks = []
-        if 'A' in i.getbands():
-            mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
-            mask = 1. - torch.from_numpy(mask)
-        else:
-            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+        for url in urls:
+            if not url.strip().isspace():
+                i = read_image_from_url(url.strip())
+                i = ImageOps.exif_transpose(i)
+                image = i.convert("RGB")
+                image = pil_to_tensor(image)
+                images.append(image)
+                if 'A' in i.getbands():
+                    mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                    mask = 1. - torch.from_numpy(mask)
+                else:
+                    mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
 
-        masks.append(mask)
+                masks.append(mask)
         return (images, masks, )
+
+
+class LoadMaskFromURL:
+    """
+    从远程地址读取图片
+    """
+    _color_channels = ["red", "green", "blue", "alpha"]
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "urls": ("STRING", {"multiline": True, "default": "", "dynamicPrompts": False}),
+                "channel": (self._color_channels, {"default": self._color_channels[0]}),
+            },
+        }
+
+    RETURN_TYPES = ("MASK", )
+    RETURN_NAMES = ("masks", )
+
+    FUNCTION = "convert"
+
+    CATEGORY = "EasyApi/Image"
+
+    # INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (True, True,)
+
+    def convert(self, urls, channel=_color_channels[0]):
+        urls = urls.splitlines()
+        masks = []
+        for url in urls:
+            if not url.strip().isspace():
+                i = read_image_from_url(url.strip())
+                # 下面代码参考LoadImage
+                i = ImageOps.exif_transpose(i)
+                if i.getbands() != ("R", "G", "B", "A"):
+                    i = i.convert("RGBA")
+                c = channel[0].upper()
+                if c in i.getbands():
+                    mask = np.array(i.getchannel(c)).astype(np.float32) / 255.0
+                    mask = torch.from_numpy(mask)
+                    if c == 'A':
+                        mask = 1. - mask
+                else:
+                    mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+                masks.append(mask)
+        return (masks,)
 
 
 class Base64ToImage:
@@ -290,7 +340,8 @@ class LoadImageToBase64(LoadImage):
 
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
-    "LoadImageFromUrl": LoadImageFromUrl,
+    "LoadImageFromURL": LoadImageFromURL,
+    "LoadMaskFromURL": LoadMaskFromURL,
     "ImageToBase64": ImageToBase64,
     # "MaskToBase64": MaskToBase64,
     "Base64ToMask": Base64ToMask,
@@ -303,7 +354,8 @@ NODE_CLASS_MAPPINGS = {
 # A dictionary that contains the friendly/humanly readable titles for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
     "Base64ToImage": "Base64 To Image",
-    "LoadImageFromUrl": "Load Image From Url",
+    "LoadImageFromURL": "Load Image From Url",
+    "LoadMaskFromURL": "Load Image From Url (As Mask)",
     "ImageToBase64": "Image To Base64",
     # "MaskToBase64": "Mask To Base64",
     "Base64ToMask": "Base64 To Mask",
