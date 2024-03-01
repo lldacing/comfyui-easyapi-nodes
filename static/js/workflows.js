@@ -2,7 +2,7 @@ import { app } from "/scripts/app.js";
 import { $el } from "/scripts/ui.js";
 
 const style = `
-#comfy-dev-save-api-button {
+#comfy-save-button, #comfy-dev-save-api-button {
    position: relative;
    overflow: hidden;
 }
