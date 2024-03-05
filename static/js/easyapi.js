@@ -31,5 +31,5 @@ app.registerExtension({
 				changeFun.apply(null, [newVal, oldVal])
 			}
 		});
-    },
+    }
 })

@@ -54,7 +54,18 @@ def image_to_base64(pli_image, pnginfo=None):
 
 
 def read_image_from_url(image_url):
-    response = requests.get(image_url)
+    s = requests.Session()
+    s.keep_alive = False
+    response = s.get(image_url, verify=False)
     img = Image.open(io.BytesIO(response.content))
     return img
 
+
+def hex_to_rgba(hex_color):
+    hex_color = hex_color.lstrip('#')
+    r, g, b = tuple(int(hex_color[i:i + 2], 16) for i in (0, 2, 4))
+    if len(hex_color) == 8:
+        a = int(hex_color[6:8], 16)
+    else:
+        a = 255
+    return r, g, b, a

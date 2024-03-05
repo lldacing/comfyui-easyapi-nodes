@@ -1,39 +1,59 @@
 import { app } from "/scripts/app.js";
 import { $el } from "/scripts/ui.js";
+import { GroupNodeHandler } from '/extensions/core/groupNode.js'
+import { EasyApiDialog } from './dialog.js'
 
 const style = `
 #comfy-save-button, #comfy-dev-save-api-button {
-   position: relative;
-   overflow: hidden;
+    position: relative;
+    overflow: hidden;
 }
 .easyapi-workflow-arrow {
-   position: absolute;
-   top: 0;
-   bottom: 0;
-   left: 0;
-   font-size: 12px;
-   display: flex;
-   align-items: center;
-   width: 24px;
-   justify-content: center;
-   background: rgba(255,255,255,0.1);
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    width: 24px;
+    justify-content: center;
+    background: rgba(255,255,255,0.1);
 }
 .easyapi-workflow-arrow:after {
-   content: "▼";
+    content: "▼";
 }
 .easyapi-workflow-arrow:hover {
-   filter: brightness(1.6);
-   background-color: var(--comfy-menu-bg);
+    filter: brightness(1.6);
+	background-color: var(--comfy-menu-bg);
 }
 .easyapi-save-popup,.easyapi-dev-save-api-popup {
-   border-radius: 6px;
+	border-radius: 6px;
 }
-
+.easyapi-dialog {
+    padding-top: 40px;
+}
+.easyapi-node-set {
+	width: 500px;
+}
+.easyapi-node-set button {
+	font-size: 100%;
+}
+.easyapi-node-set table, easyapi-node-set-all table {
+	width: 100%;
+}
+.easyapi-node-set td, .easyapi-node-set-all td {
+    border: 1px solid white;
+    padding: 2px 4px;
+}
 `;
 
 class EasyApiWorkflows {
 
 	constructor() {
+		this.nodeSetDialog = new EasyApiDialog();
+	}
+	registerSettingMenu() {
 		function replaceImageNode(apiJsonObj) {
 			const output = {};
 			for (const o in apiJsonObj) {
@@ -196,12 +216,517 @@ class EasyApiWorkflows {
 			return handleFile.apply(this, arguments);
 		};
 	}
+	registerContextMenu() {
+		const that = this;
+		const orig = LGraphCanvas.prototype.getCanvasMenuOptions;
+
+		function showNodeIdSettingDialog(menu, nodes) {
+			that.nodeSetDialog.title("Set Node Id: " + menu.content)
+				.resetPos()
+				.show($el(
+					"div.easyapi-node-set-all",
+					{
+						style: {
+							color: "white"
+						}
+					},
+					[
+						$el(
+							"div.easyapi-node-set-all-target",
+							{},
+							[
+								$el("table",
+									{
+										$: (element) => {
+											nodes.forEach((n, index) => {
+												let line =
+													$el("tr",
+														{},
+														[
+															$el("td",
+																{},
+																[
+																	$el(
+																		"div",
+																		{},
+																		[
+																			$el(
+																				"button",
+																				{
+																					textContent: "Locate",
+																					style: {
+																						width: "80px",
+																					},
+																					onclick: () => {
+																						app.canvas.centerOnNode(n);
+																						app.canvas.selectNode(n, false);
+																					}
+																				}
+																			)
+																		]
+																	)
+																]
+															),
+															that.createTd(n.id),
+															that.createTd(index + 1, {style:{color: "red"}}),
+															that.createTd(n.type),
+															that.createTd(n.title),
+															that.createTd(!!n.isVirtualNode ? "√" : ""),
+														]
+													);
+												element.append(line);
+											});
+										}
+									},
+									[
+										$el("tr",
+											{},
+											[
+												$el("th",
+													{
+														textContent: "Node Info",
+														colSpan: 5,
+													}
+												)
+											]
+										),
+										$el("tr",
+											{
+												style: {
+													textAlign: "center"
+												}
+											},
+											[
+												that.createTd("Action"),
+												that.createTd("Node Id"),
+												that.createTd("New Node Id"),
+												that.createTd("Node Type"),
+												that.createTd("Node Title"),
+												that.createTd("Is Virtual"),
+											]
+										),
+									]
+								),
+							]
+						),
+					]
+				), true, (dialog) => {
+					// console.log(nodes)
+					that.updateAllNodeId(nodes);
+					// console.log(nodes)
+					dialog.close();
+				});
+		}
+
+		LGraphCanvas.prototype.getCanvasMenuOptions = function () {
+			const options = orig.apply(this, arguments);
+			that.nodeSetDialog.close();
+			if (options.length >= 1 && options[options.length - 1] !== null) {
+				// add separator
+				options.push(null);
+			}
+			const virtualNodeInTail = (a, b) => {
+				if (a.isVirtualNode && !b.isVirtualNode) {
+					return 1;
+				} else if (!a.isVirtualNode && b.isVirtualNode) {
+					return -1;
+				}
+				return 0;
+			};
+			const virtualNodeInHead = (a, b) => {
+				if (a.isVirtualNode && !b.isVirtualNode) {
+					return -1;
+				} else if (!a.isVirtualNode && b.isVirtualNode) {
+					return 1;
+				}
+				return 0;
+			};
+			const min_x_y = (a, b) => {
+				// left to right
+				let diff = a.pos[0] - b.pos[0]
+				let offsetValue = 30
+				if (Math.abs(diff) < offsetValue) {
+					return a.pos[1] - b.pos[1]
+				}
+				return diff;
+			};
+			const min_y_x = (a, b) => {
+				// top to bottom
+				let diff = a.pos[1] - b.pos[1]
+				let offsetValue = 30
+				if (Math.abs(diff) < offsetValue) {
+					return a.pos[0] - b.pos[0]
+				}
+				return diff;
+			};
+			options.push({
+				content: "Reset All Node Id (EasyApi)",
+				has_submenu: true,
+				submenu: {
+					options: [{
+						content: "Order L -> R",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_x_y]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},
+					{
+						content: "Order L -> R and virtual node at the tail",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_x_y, virtualNodeInTail]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},
+					{
+						content: "Order L -> R and virtual node at the head",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_x_y, virtualNodeInHead]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},
+					{
+						content: "Order T -> B",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_y_x]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},
+					{
+						content: "Order T -> B and virtual node at the tail",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_y_x, virtualNodeInTail]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},
+					{
+						content: "Order T -> B and virtual node at the head",
+						has_submenu: false,
+						callback: (item, options, e, menu, extra) => {
+							const nodes = app.graph._nodes;
+							let sortArray = [min_y_x, virtualNodeInHead]
+							sortArray.forEach(sortFn => nodes.sort(sortFn));
+							showNodeIdSettingDialog(item, nodes);
+						},
+					},]
+				}
+			});
+
+			return options;
+		};
+	}
+	registerNodeContextMenu() {
+		const that = this;
+		/**
+		 * 找到目标节点id对应的所有节点，并在指定table中显示
+		 * @param tableElement
+		 * @param nodes
+		 * @param originNode
+		 * @param targetId
+		 */
+		function listByNodeId(tableElement, nodes, originNode, targetId) {
+			let filterNodes = nodes.filter(n => n.id == targetId).map(n => {
+				let line =
+					$el("tr",
+						{},
+						[
+							that.createTd(n.id == originNode.id ? '[Self] ' + n.type : n.type),
+							$el("td",
+								{},
+								[
+									$el(
+										"div",
+										{},
+										[
+											$el(
+												"span",
+												{
+													textContent: n.title
+												}
+											),
+											$el(
+												"button",
+												{
+													textContent: "Locate",
+													style: {
+														width: "60px",
+														cssFloat: "right"
+													},
+													onclick: () => {
+														app.canvas.centerOnNode(n);
+														app.canvas.selectNode(n, false);
+													}
+												}
+											)
+										]
+									)
+								]
+							)
+						]
+					)
+				return line
+			});
+			if (filterNodes.length > 0) {
+				tableElement.append($el("tr",
+					{},
+					[
+						$el("th",
+							{
+								textContent: "Nodes found with new id",
+								colSpan: 2,
+							}
+						)
+					]
+				));
+				tableElement.append(...filterNodes)
+			}
+		}
+		const getNodeMenuOptions = LGraphCanvas.prototype.getNodeMenuOptions;
+		LGraphCanvas.prototype.getNodeMenuOptions = function (node) {
+			const options = getNodeMenuOptions.apply(this, arguments);
+			that.nodeSetDialog.close();
+			if (!GroupNodeHandler.isGroupNode(node)) {
+				const nodes = node.graph._nodes;
+				nodes.sort((a, b) => {
+					if (a.isVirtualNode && !b.isVirtualNode) {
+						return 1;
+					} else if (!a.isVirtualNode && b.isVirtualNode) {
+						return -1;
+					}
+					return a.pos[0] - b.pos[0] + a.pos[1] - b.pos[1];
+				});
+				if (options.length >= 2 && options[options.length - 2] !== null) {
+					// last menu is remove
+					// add separator
+					options.splice(options.length - 1, 0, null);
+				}
+				options.splice(options.length - 1, 0,
+					{
+						content: "Set Node Id (EasyApi)",
+						callback: (item, options, e, menu, node) => {
+							that.nodeSetDialog.title(item.content).resetPos().show($el(
+								"div.easyapi-node-set",
+								{
+									style: {
+										color: "white"
+									}
+								},
+								[
+									$el(
+										"div.easyapi-node-set-target",
+										{},
+										[
+											$el("table",
+												{},
+												[
+													$el("tr",
+														{},
+														[
+															$el("th",
+																{
+																	textContent: "Node Info",
+																	colSpan: 2,
+																}
+															)
+														]
+													),
+													$el("tr",
+														{},
+														[
+															that.createTd("Node Id"),
+															$el("td",
+																{},
+																[
+																	$el(
+																		"div",
+																		{},
+																		[
+																			$el(
+																				"span",
+																				{
+																					textContent: node.id
+																				}
+																			),
+																			$el(
+																				"button",
+																				{
+																					textContent: "Locate",
+																					style: {
+																						width: "60px",
+																						cssFloat: "right"
+																					},
+																					onclick: () => {
+																						app.canvas.centerOnNode(node);
+																						app.canvas.selectNode(node, false);
+																					}
+																				}
+																			)
+																		]
+																	)
+																]
+															)
+														]
+													),
+													$el("tr",
+														{},
+														[
+															that.createTd("Node Type"),
+															that.createTd(node.type)
+														]
+													),
+													$el("tr",
+														{},
+														[
+															that.createTd("Node Title"),
+															that.createTd(node.title)
+														]
+													),
+													$el("tr",
+														{},
+														[
+															that.createTd("New Node Id"),
+															$el("td",
+																{},
+																[
+																	$el(
+																		"input",
+																		{
+																			id: "easyapi-node-new-id",
+																			type: "number",
+																			value: node.id,
+																			min: 1,
+																			step: 1,
+																			style: {
+																				paddingLeft: "6px",
+																			},
+																			onkeypress: (e) => {
+																				let keyCode = e.keyCode;
+																				if (!(keyCode >= 48 && keyCode <= 57)) {
+																					e.preventDefault();
+																				}
+																			},
+																			oninput: (e) => {
+																				let el = e.target;
+																				if (el.value) {
+																					el.value = el.value.replace(/[^\d]/g, '');
+																				} else {
+																					el.value = node.id
+																				}
+																				let repeatNodesTable = document.getElementById("easyapi-repeat-id-nodes")
+																				repeatNodesTable.innerHTML = ""
+																				listByNodeId(repeatNodesTable, nodes, node, el.value)
+																				if (!node.graph._nodes_by_id[el.value]) {
+																					that.nodeSetDialog.showSaveBtn();
+																				} else {
+																					that.nodeSetDialog.hideSaveBtn();
+																				}
+																			},
+																		}
+																	)
+																]
+															)
+														]
+													)
+												]
+											),
+											$el("table",
+												{
+													id: "easyapi-repeat-id-nodes",
+													$: (element) => listByNodeId(element, nodes, node, node.id)
+												},
+												[]
+											),
+										]
+									),
+								]
+							), false, (dialog) => {
+								let inputNodeId = document.getElementById("easyapi-node-new-id")
+								// console.log(nodes)
+								// console.log(node.graph._nodes_by_id)
+								let newNodeId = parseInt(inputNodeId.value);
+								let oldNodeId = node.id
+								if (newNodeId != oldNodeId) {
+									that.setNewIdForNode(node, newNodeId)
+									node.setDirtyCanvas(true, true);
+								}
+								// console.log(nodes)
+								// console.log(node.graph._nodes_by_id)
+								dialog.close()
+							});
+						}
+					},
+					null
+				);
+			}
+			return options;
+		};
+	}
+
+	createTd(content, options) {
+		return $el("td",
+			Object.assign({
+				textContent: content,
+			}, options || {})
+		);
+	}
+
+	setNewIdForNode(node, newNodeId) {
+
+		let oldNodeId = node.id;
+		node.id = newNodeId;
+		if (node.id != oldNodeId) {
+			// update node id
+			node.graph._nodes_by_id[node.id] = node
+			delete node.graph._nodes_by_id[oldNodeId]
+			// update links
+			for (let idx in node.graph.links) {
+				let lLink = node.graph.links[idx];
+				if (lLink.origin_id == oldNodeId) {
+					lLink.origin_id = node.id;
+				}
+				if (lLink.target_id == oldNodeId) {
+					lLink.target_id = node.id;
+				}
+			}
+		}
+	}
+
+	updateAllNodeId(nodes) {
+		// find max node id
+		const maxId = Math.max(...(nodes.map(n => n.id)));
+		// Prepare: set id to unused number
+		for (let i = 0; i < nodes.length; i++) {
+			let node = nodes[i];
+			let newNodeId = maxId + i + 1;
+			this.setNewIdForNode(node, newNodeId);
+		}
+		// Starting from 1, set id
+		for (let i = 0; i < nodes.length; i++) {
+			let node = nodes[i];
+			let newNodeId = i + 1;
+			this.setNewIdForNode(node, newNodeId);
+		}
+		app.graph.last_node_id = nodes.length;
+		app.graph.setDirtyCanvas(true, true);
+	}
 }
 
-let workflows;
-
 app.registerExtension({
-	name: "easyapi.Workflows",
+	name: "Comfy.EasyApi.Workflows",
 	init() {
 		$el("style", {
 			textContent: style,
@@ -209,6 +734,9 @@ app.registerExtension({
 		});
 	},
 	async setup() {
-		workflows = new EasyApiWorkflows();
+		let workflows = new EasyApiWorkflows();
+		workflows.registerSettingMenu();
+		workflows.registerContextMenu();
+		workflows.registerNodeContextMenu()
 	},
 });
