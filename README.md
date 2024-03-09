@@ -2,6 +2,21 @@
 针对api接口开发补充的一些自定义节点和功能。
 
 转成base64的节点都是输出节点，websocket消息中会包含base64Images和base64Type属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
+## 安装
+- 通过ComfyUI-Manager安装
+- 在ComfyUI安装目录根目录下打开命令行终端，执行以下命令
+  ```sh
+  cd custom_nodes
+  git clone https://github.com/lldacing/comfyui-easyapi-nodes.git
+  cd comfyui-easyapi-nodes
+  pip install -r requirements.txt
+  ```
+## 升级
+- 在ComfyUI安装目录根目录下打开命令行终端，执行以下命令
+  ```sh
+  cd custom_nodes/comfyui-easyapi-nodes
+  git pull
+  ```
 
 ## 节点
 | 名称                    | 说明                                                                                                                                                         |
@@ -32,19 +47,36 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 
 ## 功能
 - 扩展Save(Api Format)菜单。
-
-   支持保存api格式workflow时，把LoadImage替换成Base64ToImage节点，把PreviewImage和SaveImage替换成ImageToBase64节点
+   - 复制工作流
+   - 复制/保存api格式工作流(需打开配置Settings->Enable Dev mode Options)
+     - Save as / Copy Api
+       
+       保存/复制api格式workflow
+     - Copy EasyAi as / Copy EasyAi
+       
+       保存/复制api格式workflow。把LoadImage替换成Base64ToImage节点，把PreviewImage和SaveImage替换成ImageToBase64节点
 
   ![save api extended](docs/menu.gif)
-- Setting中支持历史记录最大条数修改
+- Settings配置扩展
 
-  图片使用base64时，数据存在内存中，默认最大历史记录条数是10000，为防止内存溢出，所以新增此配置项。
+  ![save api extended](docs/settings.png)
+  - 保留历史记录最大条数
 
-  配置路径：Setting -> Maximum History Size
+    配置路径：Settings -> [EasyApi] Maximum History Size
+
+    Tips: 图片使用base64时，数据存在内存中，默认最大历史记录条数是10000，为防止内存溢出，所以新增此配置项。
+
+  - 是否自动展开当前菜单下的子菜单
+    配置路径：Settings -> [EasyApi] Auto Open Sub Menu
+    ![save api extended](docs/menu_autoopen.gif)
+    
 - 菜单扩展
-  - 重设某个节点的id
+  - 重设某个节点的id(Node Context Menu)
   
-  ![save api extended](docs/node_context_menu_set_id.png)
-  - 从序号1开始重新设置所有节点的id
+    ![save api extended](docs/node_context_menu_set_id.png)
+  - 从序号1开始重新设置所有节点的id(Canvas Context Menu)
   
-  ![save api extended](docs/context_menu_reset_all_id.png)
+    ![save api extended](docs/context_menu_reset_all_id.png)
+  - 定位到与当前节点有连接线的节点(Node Context Menu)
+  
+    ![save api extended](docs/node_context_menu_link_node.png)

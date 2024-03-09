@@ -17,9 +17,9 @@ app.registerExtension({
 						maxSize: n
 					})
 				}), 1000, false)
-        const setting = app.ui.settings.addSetting({
-			id: name,
-			name: "Maximum History Size",
+		const setting = app.ui.settings.addSetting({
+			id: "Easyapi.SizeOfHistory",
+			name: "[EasyApi] Maximum History Size",
 			defaultValue: max,
 			type: "slider",
 			attrs: {
@@ -31,5 +31,27 @@ app.registerExtension({
 				changeFun.apply(null, [newVal, oldVal])
 			}
 		});
+		const ctxMenu = LiteGraph.ContextMenu;
+		const replace = () => {
+			LiteGraph.ContextMenu = function (values, options) {
+				options = options || {};
+				options.autoopen = true;
+				return ctxMenu.call(this, values, options);
+			};
+			LiteGraph.ContextMenu.prototype = ctxMenu.prototype;
+		};
+		app.ui.settings.addSetting({
+				id: "Easyapi.ContextMenu.autoopen",
+				name: "[EasyApi] Auto Open Sub Menu",
+				type: "boolean",
+				defaultValue: false,
+				onChange(value) {
+					if (value) {
+						replace(value);
+					} else {
+						LiteGraph.ContextMenu = ctxMenu;
+					}
+				},
+			});
     }
 })

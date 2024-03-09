@@ -196,7 +196,7 @@ class EasyApiWorkflows {
 					title: "Copy workflow",
 					callback: async () => {
 						app.graphToPrompt().then(p => {
-							const json = JSON.stringify(app.graph.serialize(), null, null); // convert the data to a JSON string
+							const json = JSON.stringify(p.workflow, null, null); // convert the data to a JSON string
 							copyToClipboard(json);
 							showTip("Copied")
 						});
@@ -218,6 +218,16 @@ class EasyApiWorkflows {
 	}
 	registerContextMenu() {
 		const that = this;
+		/*const ctxMenu = LiteGraph.ContextMenu;
+		LiteGraph.ContextMenu = function (values, options) {
+			options = options || {};
+			options.autoopen = true;
+			const ctx = ctxMenu.call(this, values, options);
+			return ctx;
+		}
+		LiteGraph.ContextMenu.prototype = ctxMenu.prototype;*/
+
+
 		const orig = LGraphCanvas.prototype.getCanvasMenuOptions;
 
 		function showNodeIdSettingDialog(menu, nodes) {
@@ -514,6 +524,8 @@ class EasyApiWorkflows {
 					// add separator
 					options.splice(options.length - 1, 0, null);
 				}
+				let hasInputLink = node.inputs?.filter(input => input?.link).length > 0;
+				let hasOutputLink = node.outputs?.filter(output => output?.links).length > 0;
 				options.splice(options.length - 1, 0,
 					{
 						content: "Set Node Id (EasyApi)",
@@ -667,6 +679,70 @@ class EasyApiWorkflows {
 								// console.log(node.graph._nodes_by_id)
 								dialog.close()
 							});
+						}
+					},
+					{
+						content: "Go To Link Node (EasyApi)",
+						disabled: !hasInputLink && !hasOutputLink,
+						has_submenu: hasInputLink || hasOutputLink,
+						submenu: {
+							options: [
+								{
+									content: "Input",
+									disabled: !hasInputLink,
+									has_submenu: hasInputLink,
+									submenu: {
+										options: node.inputs?.filter(input => input?.link)
+											.map((input) => {
+												let linkId = input.link;
+												let llink = node.graph.links[linkId];
+												let inputNodeId = llink.origin_id;
+												let inputNode = node.graph._nodes_by_id[inputNodeId]
+												return {
+													content: `${input.name} - ${input.type}`,
+													has_submenu: true,
+													submenu: {
+														options: [{
+															content: `${inputNode.getOutputInfo(llink.origin_slot)?.name} - ${inputNode.getTitle()} - #${inputNode.id} (${inputNode.pos[0]}, ${inputNode.pos[1]})`,
+															callback: (item, options, e, menu, extra) => {
+																app.canvas.centerOnNode(inputNode);
+																app.canvas.selectNode(inputNode, false);
+															}
+														}]
+													}
+												}
+											})
+									}
+								},
+								{
+									content: "Output",
+									disabled: !hasOutputLink,
+									has_submenu: hasOutputLink,
+									submenu: {
+										options: node.outputs?.filter(output => output?.links)
+											.map((output) => {
+												return {
+													content: `${output.name} - ${output.type}`,
+													has_submenu: true,
+													submenu: {
+														options: output.links.map((linkId) => {
+															let llink = node.graph.links[linkId];
+															let outputNodeId = llink.target_id;
+															let outputNode = node.graph._nodes_by_id[outputNodeId];
+															return {
+																content: `${outputNode.getInputInfo(llink.target_slot)?.name} - ${outputNode.getTitle()} - #${outputNode.id} (${outputNode.pos[0]}, ${outputNode.pos[1]})`,
+																callback: (item, options, e, menu, extra) => {
+																	app.canvas.centerOnNode(outputNode);
+																	app.canvas.selectNode(outputNode, false);
+																}
+															};
+														})
+													}
+												}
+											})
+									}
+								}
+							]
 						}
 					},
 					null
