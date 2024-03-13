@@ -1,4 +1,4 @@
-from easyapi.util import tensor_to_pil, hex_to_rgba
+from .util import tensor_to_pil, hex_to_rgba
 
 
 class GetImageBatchSize:

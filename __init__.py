@@ -10,24 +10,27 @@ NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
 
 pyPath = os.path.join(extension_folder, 'easyapi')
-sys.path.append(extension_folder)
+# sys.path.append(extension_folder)
 
 logScript.log_wrap()
-api.init()
+# api.init()
 
 
 def loadCustomNodes():
     files = glob.glob(os.path.join(pyPath, "*Node.py"), recursive=True)
-    for file in files:
-        name = os.path.splitext(file)[0]
-        spec = importlib.util.spec_from_file_location(name, file)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules[name] = module
-        spec.loader.exec_module(module)
+    api_files = glob.glob(os.path.join(pyPath, "api.py"), recursive=True)
+    find_files = files + api_files
+    for file in find_files:
+        file_relative_path = file[len(extension_folder):]
+        model_name = file_relative_path.replace(os.sep, '.')
+        model_name = os.path.splitext(model_name)[0]
+        module = importlib.import_module(model_name, __name__)
         if hasattr(module, "NODE_CLASS_MAPPINGS") and getattr(module, "NODE_CLASS_MAPPINGS") is not None:
             NODE_CLASS_MAPPINGS.update(module.NODE_CLASS_MAPPINGS)
             if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS") and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None:
                 NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
+        if hasattr(module, "init"):
+            getattr(module, "init")()
 
 
 loadCustomNodes()

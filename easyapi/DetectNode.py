@@ -4,7 +4,7 @@ from PIL import Image
 from json import JSONEncoder, JSONDecoder
 import numpy as np
 
-from easyapi.util import tensor_to_pil, pil_to_tensor, hex_to_rgba
+from .util import tensor_to_pil, pil_to_tensor, hex_to_rgba
 
 import folder_paths
 

@@ -9,7 +9,7 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
-from easyapi.util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url
+from .util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url
 
 
 class LoadImageFromURL:
