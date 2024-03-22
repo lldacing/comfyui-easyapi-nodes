@@ -778,6 +778,16 @@ class EasyApiWorkflows {
 					lLink.target_id = node.id;
 				}
 			}
+			// update app.nodeOutputs
+			if(oldNodeId in app.nodeOutputs) {
+				app.nodeOutputs[newNodeId] = app.nodeOutputs[oldNodeId]
+				delete app.nodeOutputs[oldNodeId]
+			}
+			// update app.nodePreviewImages
+			if(oldNodeId in app.nodePreviewImages) {
+				app.nodePreviewImages[newNodeId] = app.nodePreviewImages[oldNodeId]
+				delete app.nodePreviewImages[oldNodeId]
+			}
 		}
 	}
 
