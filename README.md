@@ -3,8 +3,8 @@
 
 转成base64的节点都是输出节点，websocket消息中会包含base64Images和base64Type属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
 ## 安装
-- 通过ComfyUI-Manager安装
-- 在ComfyUI安装目录根目录下打开命令行终端，执行以下命令
+- 方式1：通过ComfyUI-Manager安装
+- 方式2：在ComfyUI安装目录根目录下打开命令行终端，执行以下命令
   ```sh
   cd custom_nodes
   git clone https://github.com/lldacing/comfyui-easyapi-nodes.git
@@ -38,12 +38,15 @@
 | IntToList             | 整型转列表                                                                                                                                                      |
 | ListMerge             | 列表合并                                                                                                                                                       |
 | JoinList              | 列表根据指定分隔符连接                                                                                                                                                |
-| ShowString            | 显示字符串                                                                                                                                                      |
-| ShowInt               | 显示整型                                                                                                                                                       |
-| ShowFloat             | 显示浮点型                                                                                                                                                      |
-| ShowNumber            | 显示数字                                                                                                                                                       |
+| ShowString            | 显示字符串(可指定消息中key值)                                                                                                                                          |
+| ShowInt               | 显示整型(可指定消息中key值)                                                                                                                                           |
+| ShowFloat             | 显示浮点型(可指定消息中key值)                                                                                                                                          |
+| ShowNumber            | 显示数字(可指定消息中key值)                                                                                                                                           |
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
+
+### [示例](example/example.png)
+  ![save api extended](docs/example_note.png)
 
 ## 功能
 - 扩展Save(Api Format)菜单。
@@ -68,7 +71,12 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 
   - 是否自动展开当前菜单下的子菜单
     配置路径：Settings -> [EasyApi] Auto Open Sub Menu
+  
     ![save api extended](docs/menu_autoopen.gif)
+  - 模糊搜索
+    配置路径：Settings -> [EasyApi] Fuzzy Search  
+    ![save api extended](docs/fuzzy_search.png)
+    
     
 - 菜单扩展
   - 重设某个节点的id(Node Context Menu)

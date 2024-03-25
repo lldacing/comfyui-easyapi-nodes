@@ -525,7 +525,7 @@ class EasyApiWorkflows {
 					options.splice(options.length - 1, 0, null);
 				}
 				let hasInputLink = node.inputs?.filter(input => input?.link).length > 0;
-				let hasOutputLink = node.outputs?.filter(output => output?.links).length > 0;
+				let hasOutputLink = node.outputs?.filter(output => output?.links?.length > 0).length > 0;
 				options.splice(options.length - 1, 0,
 					{
 						content: "Set Node Id (EasyApi)",
@@ -787,6 +787,9 @@ class EasyApiWorkflows {
 			if(oldNodeId in app.nodePreviewImages) {
 				app.nodePreviewImages[newNodeId] = app.nodePreviewImages[oldNodeId]
 				delete app.nodePreviewImages[oldNodeId]
+			}
+			if (newNodeId > app.graph.last_node_id) {
+				app.graph.last_node_id = newNodeId;
 			}
 		}
 	}
