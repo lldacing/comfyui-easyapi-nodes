@@ -186,7 +186,7 @@ app.registerExtension({
                 }
 
                 // add general type if filtering
-                if (options.show_general_after_typefiltered
+                /*if (options.show_general_after_typefiltered
                     && (sIn.value || sOut.value)
                 ){
                     let filtered_extra = [];
@@ -201,7 +201,7 @@ app.registerExtension({
 							break;
 						}
 					}
-                }
+                }*/
 
                 // check il filtering gave no results
                 if ((sIn.value || sOut.value) &&

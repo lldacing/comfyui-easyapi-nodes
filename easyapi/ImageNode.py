@@ -41,6 +41,8 @@ class LoadImageFromURL:
             if not url.strip().isspace():
                 i = read_image_from_url(url.strip())
                 i = ImageOps.exif_transpose(i)
+                if i.mode == 'I':
+                    i = i.point(lambda i: i * (1 / 255))
                 image = i.convert("RGB")
                 image = pil_to_tensor(image)
                 images.append(image)
@@ -49,8 +51,8 @@ class LoadImageFromURL:
                     mask = 1. - torch.from_numpy(mask)
                 else:
                     mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+                masks.append(mask.unsqueeze(0))
 
-                masks.append(mask)
         return (images, masks, )
 
 
@@ -97,7 +99,7 @@ class LoadMaskFromURL:
                         mask = 1. - mask
                 else:
                     mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
-                masks.append(mask)
+                masks.append(mask.unsqueeze(0))
         return (masks,)
 
 
