@@ -1,5 +1,4 @@
 import os
-import json
 
 import folder_paths
 import nodes
@@ -8,6 +7,7 @@ from aiohttp import web
 import execution
 from simple_lama_inpainting import SimpleLama
 from .util import image_to_base64, base64_to_image
+from .settings import reset_history_size, get_settings, set_settings
 
 extension_folder = os.path.dirname(os.path.realpath(__file__))
 
@@ -20,28 +20,6 @@ if not os.path.exists(lama_model_path):
 else:
     os.environ['LAMA_MODEL'] = lama_model_path
 os.makedirs(lama_model_dir, exist_ok=True)
-
-
-def reset_history_size(max_size=execution.MAXIMUM_HISTORY_SIZE, isStart=False):
-    configDataFilePath = os.path.join(extension_folder, 'config')
-    if not os.path.exists(configDataFilePath):
-        os.mkdir(configDataFilePath)
-        configFile = os.path.join(configDataFilePath, "easyapi.json")
-        with open(configFile, 'w+', encoding="utf-8") as file:
-            json.dump({"history_max_size": max_size}, file, indent=2)
-    else:
-        configFile = os.path.join(configDataFilePath, "easyapi.json")
-        if not os.path.exists(configFile):
-            with open(configFile, 'w+', encoding="utf-8") as file:
-                json.dump({"history_max_size": max_size}, file, indent=2)
-        else:
-            with open(configFile, 'r+', encoding="UTF-8") as file:
-                data = json.load(file)
-                if not isStart:
-                    data['history_max_size'] = max_size
-
-            with open(configFile, 'w+', encoding="UTF-8") as file:
-                json.dump(data, file, indent=2)
 
 
 def register_routes():
@@ -70,12 +48,29 @@ def register_routes():
     @PromptServer.instance.routes.get("/easyapi/history/maxSize")
     async def get_history_size(request):
         maxSize = execution.MAXIMUM_HISTORY_SIZE
-        with open(os.path.join(extension_folder, 'config/easyapi.json'), 'r', encoding="UTF-8") as file:
-            data = json.load(file)
-            if data['history_max_size'] is not None:
-                maxSize = data['history_max_size']
+        data = get_settings(file='config/easyapi.json')
+        if 'history_max_size' in data:
+            maxSize = data['history_max_size']
 
         return web.json_response({"maxSize": maxSize})
+
+    @PromptServer.instance.routes.post("/easyapi/settings/{id}")
+    async def set_setting(request):
+        setting_id = request.match_info.get("id", None)
+        if not setting_id:
+            return web.Response(status=400)
+        json_body = await request.json()
+        set_settings(setting_id, json_body[setting_id])
+        return web.Response(status=200)
+
+    @PromptServer.instance.routes.get("/easyapi/settings/{id}")
+    async def get_setting(request):
+        setting_id = request.match_info.get("id", None)
+        settings = get_settings(file='config/easyapi.json')
+        if settings and setting_id in settings:
+            return web.json_response({setting_id: settings[setting_id]})
+
+        return web.json_response({})
 
     @PromptServer.instance.routes.post("/easyapi/prompt")
     async def post_prompt(request):

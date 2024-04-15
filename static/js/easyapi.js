@@ -5,9 +5,6 @@ import { debounce } from "./debounce.js"
 app.registerExtension({
     name: "Comfy.EasyApi.Setting",
     async setup(app) {
-		const res = await api.fetchApi("/easyapi/history/maxSize")
-		const jsonData = await res.json() || {};
-		const max = jsonData['maxSize'] || 10000
 		const changeFun = debounce((n, o) => api.fetchApi("/easyapi/history/size", {
 					method: 'POST',
 					headers: {
@@ -17,10 +14,10 @@ app.registerExtension({
 						maxSize: n
 					})
 				}), 1000, false)
-		const setting = app.ui.settings.addSetting({
+		app.ui.settings.addSetting({
 			id: "Easyapi.SizeOfHistory",
 			name: "[EasyApi] Maximum History Size",
-			defaultValue: max,
+			defaultValue: 10000,
 			type: "slider",
 			attrs: {
 				min: 1,
@@ -31,6 +28,100 @@ app.registerExtension({
 				changeFun.apply(null, [newVal, oldVal])
 			}
 		});
+		const changeFun1 = debounce((n, o) => api.fetchApi("/easyapi/settings/huggingface_mirror", {
+					method: 'POST',
+					headers: {
+						"content-type": "application/json",
+					},
+					body: JSON.stringify({
+						huggingface_mirror: n
+					})
+				}), 1000, false)
+		app.ui.settings.addSetting({
+			id: "Easyapi.MirrorSet.huggingface",
+			name: "[EasyApi] Huggingface Mirror",
+            tooltip: "Will replace host huggingface.co",
+			defaultValue: "None",
+			type: "combo",
+            options: [
+                {
+                    value: "None",
+                    text: "None"
+                },
+                {
+                    value: "hf-mirror.com",
+                    text: "hf-mirror.com"
+                }
+            ],
+
+			onChange: (newVal, oldVal) => {
+				changeFun1.apply(null, [newVal, oldVal])
+			}
+		});
+
+        const changeFun2 = debounce((n, o) => api.fetchApi("/easyapi/settings/rawgithub_mirror", {
+					method: 'POST',
+					headers: {
+						"content-type": "application/json",
+					},
+					body: JSON.stringify({
+						rawgithub_mirror: n
+					})
+				}), 1000, false)
+		app.ui.settings.addSetting({
+			id: "Easyapi.MirrorSet.rawgithub",
+			name: "[EasyApi] RawGithub Mirror",
+			defaultValue: "None",
+            tooltip: "Will replace host raw.githubusercontent.com",
+			type: "combo",
+            options: [
+                {
+                    value: "None",
+                    text: "None"
+                },
+                {
+                    value: "raw.gitmirror.com",
+                    text: "gitmirror.com"
+                },
+                {
+                    value: "mirror.ghproxy.com/https://raw.githubusercontent.com",
+                    text: "mirror.ghproxy.com"
+                },
+                {
+                    value: "ghproxy.net/https://raw.githubusercontent.com",
+                    text: "ghproxy.net"
+                },
+                {
+                    value: "ghproxy.org/https://raw.githubusercontent.com",
+                    text: "ghproxy.org"
+                },
+                {
+                    value: "gh-proxy.com/https://raw.githubusercontent.com",
+                    text: "gh-proxy.com"
+                },
+                {
+                    value: "mirrors.chenby.cn/https://raw.githubusercontent.com",
+                    text: "mirrors.chenby.cn"
+                },
+                {
+                    value: "521github.com/extdomains/raw.githubusercontent.com",
+                    text: "521github.com"
+                },
+                {
+                    value: "gh.ddlc.top/https://raw.githubusercontent.com",
+                    text: "gh.ddlc.top"
+                },
+                {
+                    value: "github.moeyy.xyz/https://raw.githubusercontent.com",
+                    text: "github.moeyy.xyz"
+                }
+            ],
+
+			onChange: (newVal, oldVal) => {
+				changeFun2.apply(null, [newVal, oldVal])
+			}
+		});
+
 		const ctxMenu = LiteGraph.ContextMenu;
 		const replace = () => {
 			LiteGraph.ContextMenu = function (values, options) {

@@ -2,7 +2,7 @@ import glob
 import importlib.util
 import sys
 import os
-from .easyapi import api, logScript
+from .easyapi import api, logScript, mirrorUrlApply
 
 extension_folder = os.path.dirname(os.path.realpath(__file__))
 
@@ -13,8 +13,8 @@ pyPath = os.path.join(extension_folder, 'easyapi')
 # sys.path.append(extension_folder)
 
 logScript.log_wrap()
-# api.init()
-
+api.init()
+mirrorUrlApply.init()
 
 def loadCustomNodes():
     files = glob.glob(os.path.join(pyPath, "*Node.py"), recursive=True)

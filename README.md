@@ -76,6 +76,9 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   - 模糊搜索
     配置路径：Settings -> [EasyApi] Fuzzy Search  
     ![save api extended](docs/fuzzy_search.png)
+  - 使用镜像地址(模型自动下载问题)
+    - 配置路径：Settings -> [EasyApi] Huggingface Mirror  
+    - 配置路径：Settings -> [EasyApi] RawGithub Mirror  
     
     
 - 菜单扩展
