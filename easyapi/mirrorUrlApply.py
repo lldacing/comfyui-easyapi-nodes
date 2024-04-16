@@ -33,6 +33,8 @@ def get_custom_mirrors():
         base_mirrors[1]['n_url'] = settings['huggingface_mirror']
     if settings and 'rawgithub_mirror' in settings:
         base_mirrors[0]['n_url'] = settings['rawgithub_mirror']
+    if settings and 'github_mirror' in settings:
+        base_mirrors[0]['n_url'] = settings['github_mirror']
     return base_mirrors
 
 
