@@ -109,7 +109,7 @@ app.registerExtension({
                     text: "gh-proxy.com"
                 },
                 {
-                    value: "gh.ddlc.top/https://raw.githubusercontent.com",
+                    value: "gh.ddlc.top/https://github.com",
                     text: "gh.ddlc.top"
                 },
                 {
@@ -121,7 +121,7 @@ app.registerExtension({
                     text: "521github.com"
                 },
                 {
-                    value: "github.moeyy.xyz/https://raw.githubusercontent.com",
+                    value: "github.moeyy.xyz/https://github.com",
                     text: "github.moeyy.xyz"
                 }
             ],
