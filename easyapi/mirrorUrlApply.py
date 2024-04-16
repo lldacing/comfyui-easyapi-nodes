@@ -16,6 +16,13 @@ mirror_url = [
         "n_url": "None",
         "u_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
     },
+    {
+        "id": "github",
+        "o_url": "github.com",
+        # "n_url": "mirror.ghproxy.com/https://github.com"
+        "n_url": "None",
+        "u_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
+    },
 ]
 
 
