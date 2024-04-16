@@ -34,7 +34,7 @@ def get_custom_mirrors():
     if settings and 'rawgithub_mirror' in settings:
         base_mirrors[0]['n_url'] = settings['rawgithub_mirror']
     if settings and 'github_mirror' in settings:
-        base_mirrors[0]['n_url'] = settings['github_mirror']
+        base_mirrors[2]['n_url'] = settings['github_mirror']
     return base_mirrors
 
 
@@ -57,43 +57,81 @@ def replace_mirror_url():
         return found, u, user_agent
 
     import urllib.request
-    origin_urlopen = urllib.request.urlopen
+    # not work when using "from urllib.request import urlopen"
+    # origin_urlopen = urllib.request.urlopen
+    # def wrap_urlopen(url, *args, **kwargs):
+    #     """
+    #     implement of lib urllib
+    #     Args:
+    #         url:
+    #         **kwargs:
+    #
+    #     Returns:
+    #
+    #     """
+    #     if isinstance(url, str):
+    #         found, u, user_agent = replace_url(url)
+    #         if found:
+    #             url = u.geturl()
+    #             data = None
+    #             if user_agent is not None:
+    #                 headers = {'User-Agent': user_agent}
+    #                 if 'data' in kwargs:
+    #                     data = kwargs['data']
+    #                 url = urllib.request.Request(url, data=data, headers=headers)
+    #
+    #         return origin_urlopen.__call__(url, *args, **kwargs)
+    #     else:
+    #         # url is urllib.request.Request
+    #         full_url = url.get_full_url()
+    #         found, u, user_agent = replace_url(full_url)
+    #         if found:
+    #             url.full_url = u.geturl()
+    #             if user_agent is not None:
+    #                 if url.headers is not None:
+    #                     url.headers['User-Agent'] = user_agent
+    #                 else:
+    #                     url.headers = {'User-Agent': user_agent}
+    #
+    #         return origin_urlopen.__call__(url, *args, **kwargs)
 
-    def wrap_urlopen(url, *args, **kwargs):
+    # open(self, fullurl, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT)
+    import socket
+    origin_urllib_open = urllib.request.OpenerDirector.open
+
+    def wrap_open(obj, fullurl, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         """
-        implement of lib urllib
+        implement of lib requests
         Args:
-            url:
+            **args: self, method, url
             **kwargs:
 
         Returns:
 
         """
-        if isinstance(url, str):
-            found, u, user_agent = replace_url(url)
+        if isinstance(fullurl, str):
+            found, u, user_agent = replace_url(fullurl)
             if found:
                 url = u.geturl()
                 data = None
                 if user_agent is not None:
                     headers = {'User-Agent': user_agent}
-                    if 'data' in kwargs:
-                        data = kwargs['data']
                     url = urllib.request.Request(url, data=data, headers=headers)
 
-            return origin_urlopen.__call__(url, *args, **kwargs)
+            return origin_urllib_open.__call__(obj, url, data, timeout)
         else:
             # url is urllib.request.Request
-            full_url = url.get_full_url()
+            full_url = fullurl.get_full_url()
             found, u, user_agent = replace_url(full_url)
             if found:
-                url.full_url = u.geturl()
+                fullurl.full_url = u.geturl()
                 if user_agent is not None:
-                    if url.headers is not None:
-                        url.headers['User-Agent'] = user_agent
+                    if fullurl.headers is not None:
+                        fullurl.headers['User-Agent'] = user_agent
                     else:
-                        url.headers = {'User-Agent': user_agent}
+                        fullurl.headers = {'User-Agent': user_agent}
 
-            return origin_urlopen.__call__(url, *args, **kwargs)
+            return origin_urllib_open.__call__(obj, fullurl, data, timeout)
 
     import requests
     origin_request = requests.Session.request
@@ -153,7 +191,8 @@ def replace_mirror_url():
 
         return origin_async_request.__call__(*args, **kwargs)
 
-    urllib.request.urlopen = wrap_urlopen
+    # urllib.request.urlopen = wrap_urlopen
+    urllib.request.OpenerDirector.open = wrap_open
     requests.Session.request = wrap_requests
     aiohttp.ClientSession._request = wrap_aiohttp_requests
 
