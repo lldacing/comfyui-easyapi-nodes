@@ -50,7 +50,7 @@ def replace_mirror_url():
     import urllib.request
     origin_urlopen = urllib.request.urlopen
 
-    def wrap_urlopen(url, **kwargs):
+    def wrap_urlopen(url, *args, **kwargs):
         """
         implement of lib urllib
         Args:
@@ -71,7 +71,7 @@ def replace_mirror_url():
                         data = kwargs['data']
                     url = urllib.request.Request(url, data=data, headers=headers)
 
-            return origin_urlopen.__call__(url, **kwargs)
+            return origin_urlopen.__call__(url, *args, **kwargs)
         else:
             # url is urllib.request.Request
             full_url = url.get_full_url()
@@ -84,7 +84,7 @@ def replace_mirror_url():
                     else:
                         url.headers = {'User-Agent': user_agent}
 
-            return origin_urlopen.__call__(url, **kwargs)
+            return origin_urlopen.__call__(url, *args, **kwargs)
 
     import requests
     origin_request = requests.Session.request
