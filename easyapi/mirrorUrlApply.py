@@ -113,12 +113,14 @@ def replace_mirror_url():
             found, u, user_agent = replace_url(fullurl)
             if found:
                 url = u.geturl()
-                data = None
                 if user_agent is not None:
                     headers = {'User-Agent': user_agent}
                     url = urllib.request.Request(url, data=data, headers=headers)
 
-            return origin_urllib_open.__call__(obj, url, data, timeout)
+                return origin_urllib_open.__call__(obj, url, data, timeout)
+            else:
+                return origin_urllib_open.__call__(obj, fullurl, data, timeout)
+
         else:
             # url is urllib.request.Request
             full_url = fullurl.get_full_url()
