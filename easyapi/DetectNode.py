@@ -25,7 +25,7 @@ class InsightFaceBBOXDetect:
             "optional": {
                 "num_color": ('STRING', {'default': '#FF0000'}),
                 "num_pos": (['center', 'left-top', 'right-top', 'left-bottom', 'right-bottom', ], {}),
-                "num_sort": (['origin', 'reactor', ], {}),
+                "num_sort": (['origin', 'left-right', 'right-left', 'top-bottom', 'bottom-top', 'small-large', 'large-small'], {}),
                 "INSIGHTFACE": ('INSIGHTFACE', {})
             }
         }
@@ -58,8 +58,18 @@ class InsightFaceBBOXDetect:
 
         img = cv2.cvtColor(np.array(tensor_to_pil(image)), cv2.COLOR_RGB2BGR)
         faces = model.get(img)
-        if num_sort == 'reactor':
+        if num_sort == 'reactor' or num_sort == 'left-right':
             faces = sorted(faces, key=lambda x: x.bbox[0])
+        if num_sort == "right-left":
+            faces = sorted(faces, key=lambda x: x.bbox[0], reverse=True)
+        if num_sort == "top-bottom":
+            faces = sorted(faces, key=lambda x: x.bbox[1])
+        if num_sort == "bottom-top":
+            faces = sorted(faces, key=lambda x: x.bbox[1], reverse=True)
+        if num_sort == "small-large":
+            faces = sorted(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]))
+        if num_sort == "large-small":
+            faces = sorted(faces, key=lambda x: (x.bbox[2] - x.bbox[0]) * (x.bbox[3] - x.bbox[1]), reverse=True)
 
         r, g, b, a = hex_to_rgba(shape_color)
         n_r, n_g, n_b, n_a = hex_to_rgba(num_color)
