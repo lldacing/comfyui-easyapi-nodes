@@ -1,3 +1,5 @@
+import torch
+
 from .util import tensor_to_pil, hex_to_rgba
 
 
@@ -266,6 +268,30 @@ class ColorPicker:
         return h, rgba, rgb, a,
 
 
+class ImageEqual:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required":
+            {
+                "a": ("IMAGE",),
+                "b": ('IMAGE',),
+            },
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+    RETURN_NAMES = ("is_b",)
+
+    FUNCTION = "compare"
+
+    CATEGORY = "EasyApi/Image"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False, )
+
+    def compare(self, a, b):
+        return torch.all(a == b),
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -278,6 +304,7 @@ NODE_CLASS_MAPPINGS = {
     "ShowNumber": ShowNumber,
     "ShowFloat": ShowFloat,
     "ColorPicker": ColorPicker,
+    "ImageEqual": ImageEqual,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -293,4 +320,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ShowNumber": "Show Number",
     "ShowFloat": "Show Float",
     "ColorPicker": "Color Picker",
+    "ImageEqual": "Image Equal Judgment",
 }
