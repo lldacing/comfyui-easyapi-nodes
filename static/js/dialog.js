@@ -93,6 +93,7 @@ export class EasyApiDialog extends ComfyDialog {
             // 设置元素的新位置：
             mainEl.style.top = (mainEl.offsetTop - offset_y) + "px";
             mainEl.style.left = (mainEl.offsetLeft - offset_x) + "px";
+            mainEl.style.width = mainEl.keepWidth + "px";
         }
 
         function closeDragElement() {
@@ -109,8 +110,9 @@ export class EasyApiDialog extends ComfyDialog {
     save() {
         this.saveCb && this.saveCb(this);
     }
-    showSaveBtn() {
+    showSaveBtn(saveBtnLabel="Update") {
         let saveBtn = this.element.getElementsByClassName("easyapi-dialog-save")[0]
+        saveBtn.innerHTML = saveBtnLabel;
         saveBtn.style.display = "";
     }
     hideSaveBtn() {
@@ -118,7 +120,7 @@ export class EasyApiDialog extends ComfyDialog {
        saveBtn.style.display = "none";
     }
 
-	show(html, showSave, saveCb) {
+	show(html, showSave, saveCb, saveBtnLabel="Update") {
 		if (typeof html === "string") {
 			this.textElement.innerHTML = html;
 		} else {
@@ -126,11 +128,12 @@ export class EasyApiDialog extends ComfyDialog {
 		}
         this.showSave = showSave || false;
         if (this.showSave) {
-            this.showSaveBtn();
+            this.showSaveBtn(saveBtnLabel);
         } else {
             this.hideSaveBtn();
         }
         this.saveCb = saveCb
-		this.element.style.display = "flex";
+        this.element.style.display = "flex";
+        this.element.keepWidth = this.element.clientWidth;
 	}
 }

@@ -6,6 +6,11 @@ app.registerExtension({
     name: "Comfy.EasyApi.Setting",
     async setup(app) {
         this.add_history_setting(app);
+        // plugins are loaded before the manager, cannot be patched with Python hooks on Windows.
+		const systemStats = await api.getSystemStats();
+        if (systemStats.system.os !== 'nt') {
+            this.add_github_clone_mirror_setting(app);
+        }
         this.add_github_mirror_setting(app);
         this.add_rawgithub_mirror_setting(app);
         this.add_huggingface_mirror_setting(app);
@@ -67,6 +72,70 @@ app.registerExtension({
             }
         });
     },
+    add_github_clone_mirror_setting: function (app) {
+        const changeFun = debounce((n, o) => api.fetchApi("/easyapi/settings/clone_github_mirror", {
+            method: 'POST',
+            headers: {
+                "content-type": "application/json",
+            },
+            body: JSON.stringify({
+                clone_github_mirror: n
+            })
+        }), 1000, false)
+        app.ui.settings.addSetting({
+            id: "Easyapi.MirrorSet.github.clone",
+            name: "[EasyApi] Github Clone Mirror",
+            defaultValue: "None",
+            tooltip: "Will replace host github.com. Suitable of git clone from github.com. On Windows platforms, it is not valid for ComfyUI manager.",
+            type: "combo",
+            options: [
+                {
+                    value: "None",
+                    text: "None"
+                },
+                {
+                    value: "hub.gitmirror.com/https://github.com",
+                    text: "gitmirror.com"
+                },
+                {
+                    value: "mirror.ghproxy.com/https://github.com",
+                    text: "mirror.ghproxy.com"
+                },
+                {
+                    value: "ghproxy.net/https://github.com",
+                    text: "ghproxy.net"
+                },
+                {
+                    value: "ghproxy.org/https://github.com",
+                    text: "ghproxy.org"
+                },
+                {
+                    value: "gh-proxy.com/https://github.com",
+                    text: "gh-proxy.com"
+                },
+                {
+                    value: "gh.ddlc.top/https://github.com",
+                    text: "gh.ddlc.top"
+                },
+                {
+                    value: "mirrors.chenby.cn/https://github.com",
+                    text: "mirrors.chenby.cn"
+                },
+                {
+                    value: "521github.com/extdomains/github.com",
+                    text: "521github.com"
+                },
+                {
+                    value: "github.moeyy.xyz/https://github.com",
+                    text: "github.moeyy.xyz"
+                }
+            ],
+
+            onChange: (newVal, oldVal) => {
+                changeFun.apply(null, [newVal, oldVal])
+            }
+        });
+    },
     add_github_mirror_setting: function (app) {
         const changeFun = debounce((n, o) => api.fetchApi("/easyapi/settings/github_mirror", {
             method: 'POST',
@@ -81,7 +150,7 @@ app.registerExtension({
             id: "Easyapi.MirrorSet.github",
             name: "[EasyApi] Github Mirror",
             defaultValue: "None",
-            tooltip: "Will replace host github.com. Suitable of download some models from github.com.",
+            tooltip: "Will replace host github.com. Suitable of downloading some models from github.com.",
             type: "combo",
             options: [
                 {
@@ -219,7 +288,11 @@ app.registerExtension({
                 {
                     value: "hf-mirror.com",
                     text: "hf-mirror.com"
-                }
+                },
+                // {
+                //     value: "gitee.com/hf-models",
+                //     text: "gitee.com"
+                // }
             ],
 
             onChange: (newVal, oldVal) => {

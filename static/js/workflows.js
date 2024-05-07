@@ -247,6 +247,9 @@ class EasyApiWorkflows {
 							[
 								$el("table",
 									{
+										style: {
+											borderCollapse: "collapse"
+										},
 										$: (element) => {
 											nodes.forEach((n, index) => {
 												let line =
@@ -543,7 +546,11 @@ class EasyApiWorkflows {
 										{},
 										[
 											$el("table",
-												{},
+												{
+													style: {
+														borderCollapse: "collapse"
+													},
+												},
 												[
 													$el("tr",
 														{},
@@ -658,6 +665,9 @@ class EasyApiWorkflows {
 											$el("table",
 												{
 													id: "easyapi-repeat-id-nodes",
+													style: {
+														borderCollapse: "collapse"
+													},
 													$: (element) => listByNodeId(element, nodes, node, node.id)
 												},
 												[]
@@ -719,7 +729,7 @@ class EasyApiWorkflows {
 									disabled: !hasOutputLink,
 									has_submenu: hasOutputLink,
 									submenu: {
-										options: node.outputs?.filter(output => output?.links)
+										options: node.outputs?.filter(output => output?.links?.length > 0)
 											.map((output) => {
 												return {
 													content: `${output.name} - ${output.type}`,
