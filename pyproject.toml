@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-easyapi-nodes"
+description = "Nodes: Base64 To Image, Image To Base64, Load Image To Base64."
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["segment_anything", "simple_lama_inpainting"]
+
+[project.urls]
+Repository = "https://github.com/lldacing/comfyui-easyapi-nodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "comfyui-easyapi-nodes"
+Icon = ""
