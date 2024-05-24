@@ -42,6 +42,9 @@
 | ShowInt               | 显示整型(可指定消息中key值)                                                                                                                                           |
 | ShowFloat             | 显示浮点型(可指定消息中key值)                                                                                                                                          |
 | ShowNumber            | 显示数字(可指定消息中key值)                                                                                                                                           |
+| ShowBoolean           | 显示布尔值(可指定消息中key值)                                                                                                                                          |
+| ImageEqual            | 图片是否相等（可用于通过判断遮罩图是否全黑来判定是否有遮罩）                                                                                                                             |
+| SDBaseVerNumber       | 判断SD大模型版本是1.5还是xl                                                                                                                                          |
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 

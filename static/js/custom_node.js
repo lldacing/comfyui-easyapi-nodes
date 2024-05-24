@@ -205,7 +205,7 @@ app.registerExtension({
             return r;
         };
 
-        if (nodeData.name === "ShowString" || nodeData.name === "ShowInt" || nodeData.name === "ShowNumber" || nodeData.name === "ShowFloat") {
+        if (nodeData.name === "ShowString" || nodeData.name === "ShowInt" || nodeData.name === "ShowNumber" || nodeData.name === "ShowFloat" || nodeData.name === "ShowBoolean") {
             const outSet = function (text) {
 				if (this.widgets) {
                     // if multiline is true, w.type will be customtext

@@ -1,3 +1,5 @@
+from enum import Enum
+
 from .settings import get_settings
 import copy
 
@@ -24,29 +26,50 @@ mirror_url = [
         "u_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
     },
 ]
+clone_mirror_url = [
+    {
+        "id": "clone_github",
+        "o_url": "github.com",
+        # "n_url": "mirror.ghproxy.com/https://github.com"
+        "n_url": "None",
+        "u_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36 Edg/123.0.0.0",
+    },
+]
 
 
-def get_custom_mirrors():
+class Mirror(Enum):
+    DOWN_MODEL = 0
+    GIT_CLONE = 1
+
+
+def get_custom_mirrors(mirror_type=None):
     settings = get_settings()
-    base_mirrors = copy.deepcopy(mirror_url)
-    if settings and 'huggingface_mirror' in settings:
-        base_mirrors[1]['n_url'] = settings['huggingface_mirror']
-    if settings and 'rawgithub_mirror' in settings:
-        base_mirrors[0]['n_url'] = settings['rawgithub_mirror']
-    if settings and 'github_mirror' in settings:
-        base_mirrors[2]['n_url'] = settings['github_mirror']
+    if mirror_type is Mirror.GIT_CLONE:
+        base_mirrors = copy.deepcopy(clone_mirror_url)
+        if settings and 'clone_github_mirror' in settings:
+            base_mirrors[0]['n_url'] = settings['clone_github_mirror']
+    elif mirror_type is Mirror.DOWN_MODEL:
+        base_mirrors = copy.deepcopy(mirror_url)
+        if settings and 'huggingface_mirror' in settings:
+            base_mirrors[1]['n_url'] = settings['huggingface_mirror']
+        if settings and 'rawgithub_mirror' in settings:
+            base_mirrors[0]['n_url'] = settings['rawgithub_mirror']
+        if settings and 'github_mirror' in settings:
+            base_mirrors[2]['n_url'] = settings['github_mirror']
+    else:
+        base_mirrors = {}
     return base_mirrors
 
 
 def replace_mirror_url():
     from urllib.parse import urlparse
 
-    def replace_url(url: str):
+    def replace_url(url: str, mirror_type: Mirror = None):
         u = urlparse(url)
         netloc = u.netloc
         found = False
         user_agent = None
-        for mirror in get_custom_mirrors():
+        for mirror in get_custom_mirrors(mirror_type):
             if netloc is not None and len(netloc) > 0 and netloc.lower() == mirror['o_url'] and mirror['n_url'] != 'None':
                 u = u._replace(netloc=mirror['n_url'])
                 print('[easyapi] origin url: {}, use mirror url: {}'.format(url, u.geturl()))
@@ -57,60 +80,22 @@ def replace_mirror_url():
         return found, u, user_agent
 
     import urllib.request
-    # not work when using "from urllib.request import urlopen"
-    # origin_urlopen = urllib.request.urlopen
-    # def wrap_urlopen(url, *args, **kwargs):
-    #     """
-    #     implement of lib urllib
-    #     Args:
-    #         url:
-    #         **kwargs:
-    #
-    #     Returns:
-    #
-    #     """
-    #     if isinstance(url, str):
-    #         found, u, user_agent = replace_url(url)
-    #         if found:
-    #             url = u.geturl()
-    #             data = None
-    #             if user_agent is not None:
-    #                 headers = {'User-Agent': user_agent}
-    #                 if 'data' in kwargs:
-    #                     data = kwargs['data']
-    #                 url = urllib.request.Request(url, data=data, headers=headers)
-    #
-    #         return origin_urlopen.__call__(url, *args, **kwargs)
-    #     else:
-    #         # url is urllib.request.Request
-    #         full_url = url.get_full_url()
-    #         found, u, user_agent = replace_url(full_url)
-    #         if found:
-    #             url.full_url = u.geturl()
-    #             if user_agent is not None:
-    #                 if url.headers is not None:
-    #                     url.headers['User-Agent'] = user_agent
-    #                 else:
-    #                     url.headers = {'User-Agent': user_agent}
-    #
-    #         return origin_urlopen.__call__(url, *args, **kwargs)
-
-    # open(self, fullurl, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT)
     import socket
+    # open(self, fullurl, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT)
     origin_urllib_open = urllib.request.OpenerDirector.open
 
     def wrap_open(obj, fullurl, data=None, timeout=socket._GLOBAL_DEFAULT_TIMEOUT):
         """
-        implement of lib requests
+        implement of lib urllib
         Args:
-            **args: self, method, url
+            **args: self, fullurl
             **kwargs:
 
         Returns:
 
         """
         if isinstance(fullurl, str):
-            found, u, user_agent = replace_url(fullurl)
+            found, u, user_agent = replace_url(fullurl, Mirror.DOWN_MODEL)
             if found:
                 url = u.geturl()
                 if user_agent is not None:
@@ -124,7 +109,7 @@ def replace_mirror_url():
         else:
             # url is urllib.request.Request
             full_url = fullurl.get_full_url()
-            found, u, user_agent = replace_url(full_url)
+            found, u, user_agent = replace_url(full_url, Mirror.DOWN_MODEL)
             if found:
                 fullurl.full_url = u.geturl()
                 if user_agent is not None:
@@ -151,12 +136,12 @@ def replace_mirror_url():
 
         if 'url' in kwargs:
             url = kwargs['url']
-            found, u, user_agent = replace_url(url)
+            found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
             if found:
                 kwargs['url'] = u.geturl()
         elif len(args) >= 3:
             url = args[2]
-            found, u, user_agent = replace_url(url)
+            found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
             if found:
                 new_updater = list(args)
                 new_updater[2] = u.geturl()
@@ -180,12 +165,12 @@ def replace_mirror_url():
 
         if 'str_or_url' in kwargs:
             url = kwargs['str_or_url']
-            found, u, user_agent = replace_url(url)
+            found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
             if found:
                 kwargs['str_or_url'] = u.geturl()
         elif len(args) >= 3:
             url = args[2]
-            found, u, user_agent = replace_url(url)
+            found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
             if found:
                 new_updater = list(args)
                 new_updater[2] = u.geturl()
@@ -193,14 +178,64 @@ def replace_mirror_url():
 
         return origin_async_request.__call__(*args, **kwargs)
 
+    import git
+    origin_git_clone = git.Repo._clone
+
+    def wrap_git_clone(*args, **kwargs):
+        """
+        implement of lib git clone
+        Args:
+            **args: cls, git, url
+            **kwargs:
+
+        Returns:
+
+        """
+
+        if 'url' in kwargs:
+            url = kwargs['url']
+            found, u, user_agent = replace_url(url, Mirror.GIT_CLONE)
+            if found:
+                kwargs['url'] = u.geturl()
+        elif len(args) >= 3:
+            url = args[2]
+            found, u, user_agent = replace_url(url, Mirror.GIT_CLONE)
+            if found:
+                new_updater = list(args)
+                new_updater[2] = u.geturl()
+                args = tuple(new_updater)
+
+        return origin_git_clone.__call__(*args, **kwargs)
+
     # urllib.request.urlopen = wrap_urlopen
     urllib.request.OpenerDirector.open = wrap_open
     requests.Session.request = wrap_requests
     aiohttp.ClientSession._request = wrap_aiohttp_requests
+    git.Repo._clone = wrap_git_clone
+
+    # try:
+        # manager has been not loaded
+        # from ComfyUI-Manager.glob import manager_core
+        # wrap_manager_git_clone = manager_core.gitclone_install
+        #
+        # def wrap_manager_git_clone(files):
+        #     urls = copy.deepcopy(files)
+        #     if isinstance(urls, []|list|()):
+        #         for i in range(len(urls)):
+        #             url = urls[i]
+        #             found, u, user_agent = replace_url(url, Mirror.GIT_CLONE)
+        #             if found:
+        #                 urls[i]=u.geturl()
+        #
+        #     return wrap_manager_git_clone.__call__(urls)
+        #
+        # manager_core.gitclone_install = wrap_manager_git_clone
+    # except Exception as e:
+    #     print("[easyapi] fail to apply manager clone patch, error: {} ".format(e))
 
 
 def init():
     try:
         replace_mirror_url()
     except Exception as e:
-        print("[easyapi] load mirror url replace patch fail, error: {} ".format(e))
+        print("[easyapi] fail to apply mirror url patch, error: {} ".format(e))
