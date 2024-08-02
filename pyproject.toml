@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-easyapi-nodes"
+description = "Provides some features and nodes related to API calls."
+version = "1.0.0"
+license = { file = "LICENSE" }
+dependencies = ["segment_anything", "simple_lama_inpainting", "insightface"]
+
+[project.urls]
+Repository = "https://github.com/lldacing/comfyui-easyapi-nodes"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = "lldacing"
+DisplayName = "comfyui-easyapi-nodes"
+Icon = ""
