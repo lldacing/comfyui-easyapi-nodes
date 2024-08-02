@@ -1,5 +1,7 @@
 import torch
 
+from comfy.model_patcher import ModelPatcher
+import comfy.model_base
 from .util import tensor_to_pil, hex_to_rgba
 
 
@@ -241,6 +243,27 @@ class ShowNumber:
         return {"ui": {key: (number,)}, "result": (number,)}
 
 
+class ShowBoolean:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "Bool": ("BOOLEAN", {"forceInput": True}),
+                "key": ('STRING', {"default": "text"}),
+            }
+        }
+
+    RETURN_TYPES = ("BOOLEAN",)
+
+    FUNCTION = "show"
+
+    CATEGORY = "EasyApi/Boolean"
+    OUTPUT_NODE = True
+
+    def show(self, Bool, key):
+        return {"ui": {key: (Bool,)}, "result": (Bool,)}
+
+
 class ColorPicker:
     @classmethod
     def INPUT_TYPES(s):
@@ -292,6 +315,44 @@ class ImageEqual:
         return torch.all(a == b),
 
 
+# from ComfyUI-layer_diffusion
+def get_model_sd_version(model: ModelPatcher):
+    base: comfy.model_base.BaseModel = model.model
+    model_config: comfy.supported_models.supported_models_base.BASE = base.model_config
+    if isinstance(model_config, comfy.supported_models.SDXL):
+        return False, True
+    elif isinstance(
+        model_config, (comfy.supported_models.SD15, comfy.supported_models.SD20)
+    ):
+        # SD15 and SD20 are compatible with each other.
+        return True, False
+    else:
+        return False, False
+
+
+class SDBaseVerNumber:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required":
+            {
+                "model": ("MODEL",),
+            },
+        }
+
+    RETURN_TYPES = ("BOOLEAN", "BOOLEAN",)
+    RETURN_NAMES = ("sd1.5", "sdxl",)
+
+    FUNCTION = "exec"
+
+    CATEGORY = "EasyApi/Logic"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False, False, )
+
+    def exec(self, model):
+        return (*get_model_sd_version(model),)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -303,8 +364,10 @@ NODE_CLASS_MAPPINGS = {
     "ShowInt": ShowInt,
     "ShowNumber": ShowNumber,
     "ShowFloat": ShowFloat,
+    "ShowBoolean": ShowBoolean,
     "ColorPicker": ColorPicker,
     "ImageEqual": ImageEqual,
+    "SDBaseVerNumber": SDBaseVerNumber,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -319,6 +382,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ShowInt": "Show Int",
     "ShowNumber": "Show Number",
     "ShowFloat": "Show Float",
+    "ShowBoolean": "Show Boolean",
     "ColorPicker": "Color Picker",
     "ImageEqual": "Image Equal Judgment",
+    "SDBaseVerNumber": "SD Base Version Number",
 }
