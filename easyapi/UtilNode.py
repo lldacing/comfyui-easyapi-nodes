@@ -312,7 +312,10 @@ class ImageEqual:
     OUTPUT_IS_LIST = (False, )
 
     def compare(self, a, b):
-        return torch.all(a == b),
+        if a.shape != b.shape:
+            return False,
+        result = torch.all(a == b)
+        return bool(result),
 
 
 # from ComfyUI-layer_diffusion
@@ -320,14 +323,20 @@ def get_model_sd_version(model: ModelPatcher):
     base: comfy.model_base.BaseModel = model.model
     model_config: comfy.supported_models.supported_models_base.BASE = base.model_config
     if isinstance(model_config, comfy.supported_models.SDXL):
-        return False, True
+        return False, True, False, False, False
     elif isinstance(
         model_config, (comfy.supported_models.SD15, comfy.supported_models.SD20)
     ):
         # SD15 and SD20 are compatible with each other.
-        return True, False
+        return True, False, False, False, False
+    elif isinstance(model_config, comfy.supported_models.AuraFlow):
+        return False, False, False, True, False
+    elif isinstance(model_config, comfy.supported_models.Flux):
+        return False, False, True, False, False
+    elif isinstance(model_config, comfy.supported_models.HunyuanDiT):
+        return False, False, False, False, True
     else:
-        return False, False
+        return False, False, False, False, False
 
 
 class SDBaseVerNumber:
@@ -340,14 +349,14 @@ class SDBaseVerNumber:
         }
 
     RETURN_TYPES = ("BOOLEAN", "BOOLEAN",)
-    RETURN_NAMES = ("sd1.5", "sdxl",)
+    RETURN_NAMES = ("sd1.5", "sdxl", "aura", "flux", "hunyuan")
 
     FUNCTION = "exec"
 
     CATEGORY = "EasyApi/Logic"
 
     INPUT_IS_LIST = False
-    OUTPUT_IS_LIST = (False, False, )
+    OUTPUT_IS_LIST = (False, False, False, False, False)
 
     def exec(self, model):
         return (*get_model_sd_version(model),)
