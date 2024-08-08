@@ -348,7 +348,7 @@ class SDBaseVerNumber:
             },
         }
 
-    RETURN_TYPES = ("BOOLEAN", "BOOLEAN",)
+    RETURN_TYPES = ("BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN", "BOOLEAN")
     RETURN_NAMES = ("sd1.5", "sdxl", "aura", "flux", "hunyuan")
 
     FUNCTION = "exec"

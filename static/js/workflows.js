@@ -2,6 +2,19 @@ import { app } from "/scripts/app.js";
 import { $el } from "/scripts/ui.js";
 import { GroupNodeHandler } from '/extensions/core/groupNode.js'
 import { EasyApiDialog } from './dialog.js'
+let ComfyButton, ComfySplitButton;
+import('/scripts/ui/components/button.js').then(module => {
+    ComfyButton = module.ComfyButton;
+}).catch(error => {
+    // console.error('模块导入失败:', error);
+});
+import('/scripts/ui/components/splitButton.js').then(module => {
+    ComfySplitButton = module.ComfySplitButton;
+}).catch(error => {
+    // console.error('模块导入失败:', error);
+});
+
+
 
 const style = `
 #comfy-save-button, #comfy-dev-save-api-button {
@@ -204,6 +217,101 @@ class EasyApiWorkflows {
 				},
 			];
 		});
+
+		// for new menu ui
+		if (!!app.menu && !!ComfyButton) {
+			const getCopyButton = (t) =>
+				new ComfyButton({
+					icon: "content-copy",
+					tooltip: "Copy the current workflow",
+					action: async () => {
+						app.graphToPrompt().then(p => {
+							const json = JSON.stringify(p.workflow, null, null);
+							copyToClipboard(json);
+							showTip("Copied")
+						});
+					},
+					content: t,
+				});
+			let copyButton = new ComfySplitButton(
+				{
+					primary: getCopyButton(),
+					mode: "hover",
+					position: "absolute",
+				},
+				getCopyButton("Copy"),
+				new ComfyButton({
+					icon: "api",
+					content: "Copy (API Format)",
+					tooltip: "Copy the current workflow as JSON for use with the ComfyUI API",
+					action: async () => {
+						app.graphToPrompt().then(p => {
+							const apiObj = p.output;
+							const json = JSON.stringify(apiObj, null, null);
+							copyToClipboard(json);
+							showTip("Copied")
+						});
+					},
+					visibilitySetting: { id: "Comfy.DevMode", showValue: true },
+					app,
+				}),
+				new ComfyButton({
+					icon: "api",
+					content: "Copy to Base64 (API Format)",
+					tooltip: "Copy the current workflow as JSON for use with the ComfyUI API, replace input and output image nodes with base64 nodes",
+					action: async () => {
+						app.graphToPrompt().then(p => {
+							const apiObj = p.output;
+							const newApiObj = replaceImageNode(apiObj)
+							const json = JSON.stringify(newApiObj, null, null); // convert the data to a JSON string
+							copyToClipboard(json);
+							showTip("Copied")
+						});
+					},
+					visibilitySetting: { id: "Comfy.DevMode", showValue: true },
+					app,
+				}),
+			);
+			app.menu.saveButton.element.after(copyButton.element);
+
+			let oldItems = app.menu.saveButton.items;
+			let exportEasyApiButton = new ComfyButton({
+				icon: "api",
+				content: "Export to Base64 (API Format)",
+				tooltip: "Export the current workflow as JSON for use with the ComfyUI API, replace input and output image nodes with base64 nodes",
+				action: async () => {
+					let filename = "workflow_api(base64).json";
+					filename = prompt("Export workflow API (Replace LoadImage to Base64Image, PreviewImage/SaveImage to ImageToBase64) as:", filename);
+					if (!filename) return;
+					if (!filename.toLowerCase().endsWith(".json")) {
+						filename += ".json";
+					}
+
+					app.graphToPrompt().then(p => {
+						const apiObj = p.output;
+						const newApiObj = replaceImageNode(apiObj)
+						const json = JSON.stringify(newApiObj, null, null); // convert the data to a JSON string
+						const blob = new Blob([json], {type: "application/json"});
+						const url = URL.createObjectURL(blob);
+						const a = $el("a", {
+							href: url,
+							download: filename,
+							style: {display: "none"},
+							parent: document.body,
+						});
+						a.click();
+						setTimeout(function () {
+							a.remove();
+							window.URL.revokeObjectURL(url);
+						}, 0);
+					});
+				},
+				visibilitySetting: { id: "Comfy.DevMode", showValue: true },
+				app,
+			})
+			oldItems.push(exportEasyApiButton);
+			app.menu.saveButton.items = oldItems;
+		}
 
 		const handleFile = app.handleFile;
 		const self = this;
