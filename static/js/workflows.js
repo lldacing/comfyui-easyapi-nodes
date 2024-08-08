@@ -258,7 +258,7 @@ class EasyApiWorkflows {
 				new ComfyButton({
 					icon: "api",
 					content: "Copy to Base64 (API Format)",
-					tooltip: "Copy the current workflow as JSON for use with the ComfyUI API, replace input and output image nodes with base64 nodes",
+					tooltip: "Copy the current workflow as JSON for use with the ComfyUI API (Replace LoadImage to Base64Image, PreviewImage/SaveImage to ImageToBase64, LoadImageMask to Base64ToMask)",
 					action: async () => {
 						app.graphToPrompt().then(p => {
 							const apiObj = p.output;
@@ -278,7 +278,7 @@ class EasyApiWorkflows {
 			let exportEasyApiButton = new ComfyButton({
 				icon: "api",
 				content: "Export to Base64 (API Format)",
-				tooltip: "Export the current workflow as JSON for use with the ComfyUI API, replace input and output image nodes with base64 nodes",
+				tooltip: "Export the current workflow as JSON for use with the ComfyUI API (Replace LoadImage to Base64Image, PreviewImage/SaveImage to ImageToBase64, LoadImageMask to Base64ToMask)",
 				action: async () => {
 					let filename = "workflow_api(base64).json";
 					filename = prompt("Export workflow API (Replace LoadImage to Base64Image, PreviewImage/SaveImage to ImageToBase64) as:", filename);

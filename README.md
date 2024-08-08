@@ -51,6 +51,12 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 ### [示例](example/example.png)
   ![save api extended](docs/example_note.png)
 
+## 更新记录
+### 2024-08-08
+- 菜单适配ComfyUI前端新界面
+
+  ![save api extended](docs/menu_new_ui.gif)
+
 ## 功能
 - 扩展Save(Api Format)菜单。
    - 复制工作流
