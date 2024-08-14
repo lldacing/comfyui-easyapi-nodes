@@ -330,9 +330,9 @@ def get_model_sd_version(model: ModelPatcher):
         # SD15 and SD20 are compatible with each other.
         return True, False, False, False, False
     elif isinstance(model_config, comfy.supported_models.AuraFlow):
-        return False, False, False, True, False
-    elif isinstance(model_config, comfy.supported_models.Flux):
         return False, False, True, False, False
+    elif isinstance(model_config, comfy.supported_models.Flux):
+        return False, False, False, True, False
     elif isinstance(model_config, comfy.supported_models.HunyuanDiT):
         return False, False, False, False, True
     else:
