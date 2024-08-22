@@ -249,7 +249,10 @@ app.registerExtension({
             const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function (texts) {
                 onExecuted?.apply(this, arguments);
-                let show = texts[k]
+                let show = []
+                for (let k in texts) {
+                    show = texts[k]
+                }
                 outSet.call(this, show);
             };
             /*const onConfigure = nodeType.prototype.onConfigure;
