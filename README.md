@@ -45,13 +45,25 @@
 | ShowBoolean           | 显示布尔值(可指定消息中key值)                                                                                                                                          |
 | ImageEqual            | 图片是否相等（可用于通过判断遮罩图是否全黑来判定是否有遮罩）                                                                                                                             |
 | SDBaseVerNumber       | 判断SD大模型版本是1.5还是xl                                                                                                                                          |
+| ListWrapper           | 包装成列表（任意类型）                                                                                                                                                |
+| BboxToCropData        | bbox转cropData，方便接入was节点使用                                                                                                                                  |
+| BboxToBbox            | bbox两种格式(x,y,w,h)和(x1,y1,x2,y2)的相互转换                                                                                                                       |
+| BboxesToBboxes        | BboxToBbox节点的列表版本                                                                                                                                          |
+| SelectBbox            | 从Bbox列表中选择一个                                                                                                                                               |
+| SelectBboxes          | 从Bbox列表中选择多个                                                                                                                                               |
+| CropImageByBbox       | 根据Bbox区域裁剪图片                                                                                                                                               |
+| MaskByBboxes          | 根据Bbox列表画遮罩                                                                                                                                                |
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 
 ### [示例](example/example.png)
   ![save api extended](docs/example_note.png)
+  ![save api extended](example/example_1.png)
 
 ## 更新记录
+### 2024-09-04
+- 添加一些bbox相关节点
+
 ### 2024-08-08
 - 菜单适配ComfyUI前端新界面
 

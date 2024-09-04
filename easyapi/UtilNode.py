@@ -2,7 +2,7 @@ import torch
 
 from comfy.model_patcher import ModelPatcher
 import comfy.model_base
-from .util import tensor_to_pil, hex_to_rgba
+from .util import tensor_to_pil, hex_to_rgba, any_type
 
 
 class GetImageBatchSize:
@@ -362,6 +362,39 @@ class SDBaseVerNumber:
         return (*get_model_sd_version(model),)
 
 
+class ListWrapper:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {"required": {
+            "any_1": (any_type, {"forceInput": True}),
+        },
+            "optional": {
+                "any_2": (any_type, {"forceInput": True}),
+            },
+        }
+
+    RETURN_TYPES = (any_type,)
+    # RETURN_NAMES = ("STRING", )
+
+    FUNCTION = "to_list"
+
+    OUTPUT_NODE = False
+    CATEGORY = "EasyApi/List"
+
+    INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (False, )
+    DESCRIPTION = "把输入放到一个列表中，如bbox转bboxes"
+
+    def to_list(self, any_1, any_2=None):
+        if any_1 is None:
+            return None
+        else:
+            if any_2 is None:
+                return ((any_1,),)
+            else:
+                return ((any_1, any_2),)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -377,6 +410,7 @@ NODE_CLASS_MAPPINGS = {
     "ColorPicker": ColorPicker,
     "ImageEqual": ImageEqual,
     "SDBaseVerNumber": SDBaseVerNumber,
+    "ListWrapper": ListWrapper,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -395,4 +429,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ColorPicker": "Color Picker",
     "ImageEqual": "Image Equal Judgment",
     "SDBaseVerNumber": "SD Base Version Number",
+    "ListWrapper": "ListWrapper",
 }

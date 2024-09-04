@@ -1,7 +1,7 @@
 import os
 
 from PIL import Image
-from json import JSONEncoder, JSONDecoder
+from json import JSONEncoder
 import numpy as np
 
 from .util import tensor_to_pil, pil_to_tensor, hex_to_rgba
