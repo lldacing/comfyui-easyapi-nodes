@@ -99,7 +99,7 @@ app.registerExtension({
                 },
                 {
                     value: "ghp.ci/https://github.com",
-                    text: "mirror.ghproxy.com"
+                    text: "ghp.ci"
                 },
                 {
                     value: "mirror.ghproxy.com/https://github.com",
@@ -167,7 +167,7 @@ app.registerExtension({
                 },
                 {
                     value: "ghp.ci/https://github.com",
-                    text: "mirror.ghproxy.com"
+                    text: "ghp.ci"
                 },
                 {
                     value: "mirror.ghproxy.com/https://github.com",
@@ -234,8 +234,8 @@ app.registerExtension({
                     text: "gitmirror.com"
                 },
                 {
-                    value: "ghp.ci/https://github.com",
-                    text: "mirror.ghproxy.com"
+                    value: "ghp.ci/https://raw.githubusercontent.com",
+                    text: "ghp.ci"
                 },
                 {
                     value: "mirror.ghproxy.com/https://raw.githubusercontent.com",
