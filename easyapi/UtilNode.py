@@ -142,7 +142,7 @@ class ListMerge:
     FUNCTION = "convert"
 
     OUTPUT_NODE = False
-    CATEGORY = "EasyApi/String"
+    CATEGORY = "EasyApi/List"
 
     def convert(self, list_a, list_b=None):
         list = [] + list_a
@@ -387,12 +387,12 @@ class ListWrapper:
 
     def to_list(self, any_1, any_2=None):
         if any_1 is None:
-            return None
+            return None,
         else:
             if any_2 is None:
-                return ((any_1,),)
+                return ([any_1,],)
             else:
-                return ((any_1, any_2),)
+                return ([any_1, any_2],)
 
 
 NODE_CLASS_MAPPINGS = {
