@@ -395,6 +395,30 @@ class ListWrapper:
                 return ([any_1, any_2],)
 
 
+class ListUnWrapper:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {"required": {
+            "lst": (any_type, {}),
+        },
+        }
+
+    RETURN_TYPES = (any_type,)
+    # RETURN_NAMES = ("STRING", )
+
+    FUNCTION = "unwrapper"
+
+    OUTPUT_NODE = False
+    CATEGORY = "EasyApi/List"
+
+    # INPUT_IS_LIST = False
+    OUTPUT_IS_LIST = (True, False)
+    DESCRIPTION = "输出的是一个个的元素，相当于执行多次后面连接的那个节点，配合ListWrapper可以实现预览不同尺寸的图像"
+
+    def unwrapper(self, lst):
+        return (lst,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -411,6 +435,7 @@ NODE_CLASS_MAPPINGS = {
     "ImageEqual": ImageEqual,
     "SDBaseVerNumber": SDBaseVerNumber,
     "ListWrapper": ListWrapper,
+    "ListUnWrapper": ListUnWrapper,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -430,4 +455,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ImageEqual": "Image Equal Judgment",
     "SDBaseVerNumber": "SD Base Version Number",
     "ListWrapper": "ListWrapper",
+    "ListUnWrapper": "ListUnWrapper",
 }

@@ -234,6 +234,7 @@ class CropImageByBbox:
     RETURN_NAMES = ("crop_image", "mask", "crop_bbox")
     FUNCTION = "crop"
     CATEGORY = "EasyApi/Bbox"
+    DESCRIPTION = "根据bbox区域裁剪图片。 bbox的格式是左上角和右下角坐标： [x,y,x1,y1]"
 
     def crop(self, image: torch.Tensor, bbox, margin):
         x, y, x1, y1 = bbox

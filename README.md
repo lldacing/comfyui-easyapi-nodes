@@ -46,6 +46,7 @@
 | ImageEqual            | 图片是否相等（可用于通过判断遮罩图是否全黑来判定是否有遮罩）                                                                                                                             |
 | SDBaseVerNumber       | 判断SD大模型版本是1.5还是xl                                                                                                                                          |
 | ListWrapper           | 包装成列表（任意类型）                                                                                                                                                |
+| ListUnWrapper         | 转成输出列表，后面连接的节点会把每个元素执行一遍，实现类似遍历效果                                                                                                                          |
 | BboxToCropData        | bbox转cropData，方便接入was节点使用                                                                                                                                  |
 | BboxToBbox            | bbox两种格式(x,y,w,h)和(x1,y1,x2,y2)的相互转换                                                                                                                       |
 | BboxesToBboxes        | BboxToBbox节点的列表版本                                                                                                                                          |
@@ -56,11 +57,18 @@
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 
-### [示例](example/example.png)
+### 示例
   ![save api extended](docs/example_note.png)
+### [工作流](example/example.png)
+  ![save api extended](example/example.png)
   ![save api extended](example/example_1.png)
+  ![save api extended](example/example_2.png)
+  ![save api extended](example/example_3.png)
 
 ## 更新记录
+### 2024-09-19
+- 添加ListUnWrapper节点
+
 ### 2024-09-04
 - 添加一些bbox相关节点
 
@@ -100,7 +108,8 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   - 使用镜像地址(模型自动下载问题)
     - 配置路径：Settings -> [EasyApi] Huggingface Mirror  
     - 配置路径：Settings -> [EasyApi] RawGithub Mirror  
-    
+    - 配置路径：Settings -> [EasyApi] Github Mirror  
+    ![save api extended](docs/settings_1.png)
     
 - 菜单扩展
   - 重设某个节点的id(Node Context Menu)

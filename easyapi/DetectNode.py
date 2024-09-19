@@ -40,6 +40,7 @@ class InsightFaceBBOXDetect:
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False, False)
+    DESCRIPTION = "检测图片中的人脸，bbox是一个包含所有人脸的json字符串，格式是每个人脸区域的左上角和右下角角坐标: [[x1_1,y1_1,x1_2,y1_2],[x2_1,y2_1,x2_2,y2_2],...]"
 
     def detect(self, image, shape, shape_color, show_num, num_color='#FF0000', num_pos=None, num_sort=None,
                INSIGHTFACE=None):
