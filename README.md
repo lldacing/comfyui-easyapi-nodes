@@ -54,18 +54,25 @@
 | SelectBboxes          | 从Bbox列表中选择多个                                                                                                                                               |
 | CropImageByBbox       | 根据Bbox区域裁剪图片                                                                                                                                               |
 | MaskByBboxes          | 根据Bbox列表画遮罩                                                                                                                                                |
+| SplitStringToList     | 根据分隔符把字符串拆分为某种数据类型(str/int/float/bool)的列表                                                                                                                  |
+| IndexOfList           | 从列表中获取指定位置的元素                                                                                                                                              |                                                                                                                                                         |
+| IndexesOfList         | 从列表中筛选出指定位置的元素列表                                                                                                                                           |                                                                                                                                                         |
+| StringArea            | 字符串文本框（多行输入区域）                                                                                                                                             |                                                                                                                                                         |
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 
 ### 示例
   ![save api extended](docs/example_note.png)
-### [工作流](example/example.png)
+### [工作流](example)
   ![save api extended](example/example.png)
   ![save api extended](example/example_1.png)
   ![save api extended](example/example_2.png)
   ![save api extended](example/example_3.png)
 
 ## 更新记录
+### 2024-09-20
+- 添加节点：SplitStringToList、 IndexOfList、 IndexesOfList、 StringArea。[简单示例](example/example_4.png)
+
 ### 2024-09-19
 - 添加ListUnWrapper节点
 

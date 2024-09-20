@@ -141,9 +141,6 @@ class BboxesToBboxes:
 
 
 class SelectBbox:
-    def __init__(self):
-        self.models = {}
-
     @classmethod
     def INPUT_TYPES(self):
         return {
@@ -166,6 +163,7 @@ class SelectBbox:
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False, False)
+    DESCRIPTION = "根据索引过滤"
 
     def select(self, index, bboxes=None, bboxes_json=None):
         if bboxes is None:
@@ -179,9 +177,6 @@ class SelectBbox:
 
 
 class SelectBboxes:
-    def __init__(self):
-        self.models = {}
-
     @classmethod
     def INPUT_TYPES(self):
         return {
@@ -204,7 +199,7 @@ class SelectBboxes:
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False, False)
-    DESCRIPTION = "根据索引(多个逗号分隔)选择bbox"
+    DESCRIPTION = "根据索引(支持逗号分隔)过滤"
 
     def select(self, index, bboxes=None, bboxes_json=None):
         indices = [int(i) for i in index.split(",")]

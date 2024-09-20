@@ -48,6 +48,7 @@ class JoinList:
 
     # INPUT_IS_LIST = False
     # OUTPUT_IS_LIST = (False, False)
+    DESCRIPTION = "将列表中的元素用分隔符连接成字符串。如 [\"a\",\"b\",\"c\"] => \"a,b,c\""
 
     def join(self, lst, delimiter=','):
         lst = delimiter.join(list(map(str, lst)))
@@ -117,12 +118,43 @@ class StringToList:
 
     OUTPUT_NODE = False
     CATEGORY = "EasyApi/String"
+    DESCRIPTION = "字符串拼接在一起。如 a和b => [a,b]"
 
     def convert(self, str_a, str_b=None):
         list = [str_a]
         if str_b:
             list.append(str_b)
         return (list,)
+
+
+class SplitStringToList:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "str": ('STRING', {"forceInput": True}),
+                "to_type": (["str", "int", "float", "bool"], {"default": "str"}),
+                "delimiter": ('STRING', {"default": ","}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST",)
+
+    FUNCTION = "convert"
+
+    OUTPUT_NODE = False
+    CATEGORY = "EasyApi/String"
+    DESCRIPTION = "按分隔符把字符串拆分成列表。如 \"a,b,c\" => [a,b,c]"
+
+    def convert(self, str, to_type, delimiter):
+        result = [item.strip() for item in str.split(delimiter)]
+        if to_type == "int":
+            result = [int(x) for x in result]
+        elif to_type == "float":
+            result = [float(x) for x in result]
+        elif to_type == "bool":
+            result = [bool(x) for x in result]
+        return (result,)
 
 
 class ListMerge:
@@ -376,16 +408,16 @@ class ListWrapper:
     RETURN_TYPES = (any_type,)
     # RETURN_NAMES = ("STRING", )
 
-    FUNCTION = "to_list"
+    FUNCTION = "wrapper"
 
     OUTPUT_NODE = False
     CATEGORY = "EasyApi/List"
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False, )
-    DESCRIPTION = "把输入放到一个列表中，如bbox转bboxes"
+    DESCRIPTION = "把输入放到一个列表中，如 [a,b]和[c] => [[a,b],[c]]"
 
-    def to_list(self, any_1, any_2=None):
+    def wrapper(self, any_1, any_2=None):
         if any_1 is None:
             return None,
         else:
@@ -419,6 +451,76 @@ class ListUnWrapper:
         return (lst,)
 
 
+class IndexOfList:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "lst": (any_type, {}),
+                "index": ('INT', {'default': 0, 'step': 1, 'min': 0, 'max': 50}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("any",)
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/List"
+
+    DESCRIPTION = "根据索引过滤"
+
+    def execute(self, lst, index):
+        if isinstance(lst, list) and len(lst) > index:
+            return (lst[index], )
+        return (None, )
+
+
+class IndexesOfList:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "lst": (any_type, {}),
+                "index": ('STRING', {'default': "0"}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("lst",)
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/List"
+
+    DESCRIPTION = "根据索引(支持逗号分隔)过滤"
+
+    def execute(self, lst, index):
+        indices = [int(i.strip()) for i in index.split(",")]
+        if isinstance(lst, list):
+            filtered = [lst[i] for i in indices if 0 <= i < len(lst)]
+            return (filtered,)
+        return (None, )
+
+
+class StringArea:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {"value": ("STRING", {"default": "", "multiline": True})},
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("STRING",)
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/String"
+
+    def execute(self, value):
+        return (value,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -436,6 +538,10 @@ NODE_CLASS_MAPPINGS = {
     "SDBaseVerNumber": SDBaseVerNumber,
     "ListWrapper": ListWrapper,
     "ListUnWrapper": ListUnWrapper,
+    "SplitStringToList": SplitStringToList,
+    "IndexOfList": IndexOfList,
+    "IndexesOfList": IndexesOfList,
+    "StringArea": StringArea,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -456,4 +562,8 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SDBaseVerNumber": "SD Base Version Number",
     "ListWrapper": "ListWrapper",
     "ListUnWrapper": "ListUnWrapper",
+    "SplitStringToList": "SplitStringToList",
+    "IndexOfList": "IndexOfList",
+    "IndexesOfList": "IndexesOfList",
+    "StringArea": "StringArea",
 }
