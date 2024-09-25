@@ -58,6 +58,8 @@
 | IndexOfList           | 从列表中获取指定位置的元素                                                                                                                                              |                                                                                                                                                         |
 | IndexesOfList         | 从列表中筛选出指定位置的元素列表                                                                                                                                           |                                                                                                                                                         |
 | StringArea            | 字符串文本框（多行输入区域）                                                                                                                                             |                                                                                                                                                         |
+| ForEachOpen           | 循环开始节点                                                                                                                                                     |                                                                                                                                                         |
+| ForEachClose          | 循环结束节点                                                                                                                                                     |                                                                                                                                                         |
 
 Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 
@@ -70,8 +72,11 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![save api extended](example/example_3.png)
 
 ## 更新记录
-### 2024-09-20
-- 添加节点：SplitStringToList、 IndexOfList、 IndexesOfList、 StringArea。[简单示例](example/example_4.png)
+### 2024-09-25 [示例](example/example_4.png)
+- 新增节点：ForEachOpen、 ForEachClose 
+
+### 2024-09-20 [示例](example/example_4.png)
+- 添加节点：SplitStringToList、 IndexOfList、 IndexesOfList、 StringArea
 
 ### 2024-09-19
 - 添加ListUnWrapper节点

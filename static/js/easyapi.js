@@ -579,3 +579,163 @@ app.registerExtension({
 		}
     }
 })
+
+function removeOutSoltAndLink(node, out_slot_i) {
+    let outNodes = node.getOutputNodes(out_slot_i);
+    if (!!node.getOutputNodes(out_slot_i)) {
+        outNodes.forEach(outNode => {
+            node.disconnectOutput(out_slot_i, outNode.id);
+        })
+    }
+    node.removeOutput(out_slot_i);
+}
+
+
+let filter_node_type = ['ForEachOpen', 'ForEachClose']
+let output_fixed_num_for_filter_node_type = [3, 0]
+
+app.registerExtension({
+    name: "Comfy.EasyApi.ForNode",
+    async beforeRegisterNodeDef(nodeType, nodeData, app) {
+
+		if (filter_node_type.indexOf(nodeData.name) > -1) {
+			let input_name = "initial_value";
+			let output_name = "value";
+            let fixed_head_input_names = ["flow_control"];
+            let fixed_tail_input_names = ["total"];
+            // 与py代码中定义保持一致
+            let max_number_of_inputs = 20;
+            let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(nodeData.name)];
+
+			nodeType.prototype.onConnectionsChange = function (type, index, connected, link_info) {
+				if(!link_info)
+					return;
+
+				if(type == 2) {
+					// connect output
+                    if (link_info.origin_slot >= out_fixed_num){
+                        let fixed_head_solts = this.inputs.filter(x => fixed_head_input_names.indexOf(x.name) > -1);
+                        let fixed_head_solt_count = fixed_head_solts ? fixed_head_solts.length : 0;
+                        // 设置输入类型
+                        let input_slot = link_info.origin_slot - out_fixed_num + fixed_head_solt_count
+                        if (connected) {
+                            let output_type = app.graph._nodes_by_id[link_info.target_id].inputs[link_info.target_slot].type
+                            if(!this.inputs[input_slot]?.link && output_type !== "*") {
+                                // 输入节点无连接
+                                this.setOutputDataType(link_info.origin_slot, output_type)
+                                this.inputs[input_slot].type = output_type
+                            }
+                        } else {
+                            if(!this.inputs[input_slot]?.link && this.inputs[input_slot]?.type !== "*") {
+                                this.setOutputDataType(link_info.origin_slot, "*")
+                                if (input_slot < this.inputs.length) {
+                                    this.inputs[input_slot].type = "*";
+                                }
+                            }
+                        }
+                    }
+				}
+				else {
+                    if (filter_node_type.indexOf(nodeData.name) > -1 && app.graph._nodes_by_id[link_info.origin_id].type == 'Reroute')
+                        this.disconnectInput(link_info.target_slot);
+
+                    // connect input
+                    if (fixed_tail_input_names.indexOf(this.inputs[index].name) > -1 || fixed_head_input_names.indexOf(this.inputs[index].name) > -1)
+                        return;
+
+                    if (this.inputs[0].type == '*') {
+                        const node = app.graph.getNodeById(link_info.origin_id);
+                        let origin_type = node.outputs[link_info.origin_slot].type;
+
+                        if (origin_type == '*') {
+                            this.disconnectInput(link_info.target_slot);
+                            return;
+                        }
+                    }
+
+                    let fixed_head_solts = this.inputs.filter(x => fixed_head_input_names.indexOf(x.name) > -1);
+                    let fixed_head_solt_count = fixed_head_solts ? fixed_head_solts.length : 0;
+
+                    // let fixed_tail_solts = this.inputs.filter(x => fixed_tail_input_names.indexOf(x.name) > -1);
+                    // let fixed_tail_solt_count = fixed_tail_solts ? fixed_tail_solts.length : 0;
+                    // let converted_count = fixed_head_solt_count + fixed_tail_solt_count;
+
+                    // 设置类型
+                    if (connected) {
+                        let input_type = app.graph._nodes_by_id[link_info.origin_id].outputs[link_info.origin_slot].type
+                        this.inputs[link_info.target_slot].type = input_type
+                        this.setOutputDataType(link_info.target_slot - fixed_head_solt_count + out_fixed_num, input_type)
+                    } else {
+                        let out_slot = link_info.target_slot - fixed_head_solt_count + out_fixed_num
+                        if ((!this.outputs[out_slot]?.links || this.outputs[out_slot]?.links?.length == 0) && this.inputs[link_info.target_slot]?.type !== "*") {
+                            this.inputs[link_info.target_slot].type = "*"
+                            this.setOutputDataType(out_slot, "*")
+                        }
+                    }
+
+                    // 给所有动态输入编号
+                    let slot_i = 0;
+                    for (let i = 0; i < this.inputs.length; i++) {
+                        let input_i = this.inputs[i];
+                        if (fixed_tail_input_names.indexOf(input_i.name) < 0 && fixed_head_input_names.indexOf(input_i.name) < 0) {
+                            input_i.name = `${input_name}${slot_i + 1}`;
+                            slot_i++;
+                        }
+                    }
+
+                    if (connected && index == (fixed_head_solt_count + slot_i - 1)) {
+                        if (max_number_of_inputs == slot_i) {
+                            return;
+                        }
+                        slot_i++;
+                        this.addInput(`${input_name}${slot_i}`, "*");
+                        this.addOutput(`${output_name}${slot_i}`, "*");
+                    }
+
+                    // 最后面未连接的只保留一个
+                    for (let i = fixed_head_solt_count + slot_i - 1; i >= 1; i--) {
+                        let input_i_1 = this.inputs[i - 1];
+                        let input_i = this.inputs[i];
+                        if (fixed_head_input_names.indexOf(input_i_1.name) < 0 && !input_i_1.link && !input_i.link) {
+                            // 删除最后一个输入插槽
+                            this.removeInput(i);
+                            // 对应输出有连线，断开连线
+                            let out_slot_i = out_fixed_num + i - fixed_head_solt_count;
+                            removeOutSoltAndLink(this, out_slot_i);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    let that = this;
+                    // 找到所有 name 属性为 fixed_tail_input_name 的元素的索引
+                    const indicesToMove = this.inputs.reduce((acc, item, index) => {
+                        if (fixed_tail_input_names.indexOf(item.name) > -1) {
+                            acc.push(index);
+                        }
+                        return acc;
+                    }, []);
+
+                    // 从原数组中移除这些元素
+                    const elementsToMove = indicesToMove.map(index => that.inputs.splice(index, 1)).flat();
+
+                    // 将这些元素添加到数组末尾
+                    elementsToMove.forEach(element => that.inputs.push(element));
+                }
+			}
+		}
+	},
+
+    async nodeCreated(node, app) {
+        // Fires every time a node is constructed
+        // You can modify widgets/add handlers/etc here
+        if (filter_node_type.indexOf(node.title) > -1) {
+            let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(node.title)];
+            if (node.id == -1) {
+                for (let i = node.outputs.length - 1; i > out_fixed_num; i--) {
+                    removeOutSoltAndLink(node, i);
+                }
+            }
+        }
+    }
+})
