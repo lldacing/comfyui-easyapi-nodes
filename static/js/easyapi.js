@@ -603,8 +603,8 @@ app.registerExtension({
 			let output_name = "value";
             let fixed_head_input_names = ["flow_control"];
             let fixed_tail_input_names = ["total"];
-            // 与py代码中定义保持一致
-            let max_number_of_inputs = 20;
+            // 比py代码中定义少1，因为不含initial_value0
+            let max_number_of_inputs = 19;
             let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(nodeData.name)];
 
 			nodeType.prototype.onConnectionsChange = function (type, index, connected, link_info) {
@@ -619,7 +619,7 @@ app.registerExtension({
                         // 设置输入类型
                         let input_slot = link_info.origin_slot - out_fixed_num + fixed_head_solt_count
                         if (connected) {
-                            let output_type = app.graph._nodes_by_id[link_info.target_id].inputs[link_info.target_slot].type
+                            let output_type = app.graph._nodes_by_id[link_info.target_id]?.inputs[link_info.target_slot]?.type
                             if(!this.inputs[input_slot]?.link && output_type !== "*") {
                                 // 输入节点无连接
                                 this.setOutputDataType(link_info.origin_slot, output_type)
@@ -662,9 +662,11 @@ app.registerExtension({
 
                     // 设置类型
                     if (connected) {
-                        let input_type = app.graph._nodes_by_id[link_info.origin_id].outputs[link_info.origin_slot].type
-                        this.inputs[link_info.target_slot].type = input_type
-                        this.setOutputDataType(link_info.target_slot - fixed_head_solt_count + out_fixed_num, input_type)
+                        let input_type = app.graph._nodes_by_id[link_info.origin_id]?.outputs[link_info.origin_slot]?.type
+                        if (!!input_type) {
+                            this.inputs[link_info.target_slot].type = input_type
+                            this.setOutputDataType(link_info.target_slot - fixed_head_solt_count + out_fixed_num, input_type)
+                        }
                     } else {
                         let out_slot = link_info.target_slot - fixed_head_solt_count + out_fixed_num
                         if ((!this.outputs[out_slot]?.links || this.outputs[out_slot]?.links?.length == 0) && this.inputs[link_info.target_slot]?.type !== "*") {
@@ -732,6 +734,16 @@ app.registerExtension({
         if (filter_node_type.indexOf(node.title) > -1) {
             let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(node.title)];
             if (node.id == -1) {
+			    let input_name = "initial_value";
+                for (let i = node.inputs.length - 1; i >= 0; i--) {
+                    let index = node.inputs[i].name.indexOf(input_name);
+                    if (index == 0) {
+                        let num = parseInt(node.inputs[i].name.replace(input_name, ""))
+                        if (num > 1) {
+                            node.removeInput(i)
+                        }
+                    }
+                }
                 for (let i = node.outputs.length - 1; i > out_fixed_num; i--) {
                     removeOutSoltAndLink(node, i);
                 }

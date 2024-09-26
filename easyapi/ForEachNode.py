@@ -89,7 +89,7 @@ class InnerLoopClose:
             inputs["optional"]["initial_value%d" % i] = ("*",)
         return inputs
 
-    RETURN_TYPES = tuple(["*"] * NUM_FLOW_SOCKETS)
+    RETURN_TYPES = tuple([any_type] * NUM_FLOW_SOCKETS)
     RETURN_NAMES = tuple(["value%d" % i for i in range(NUM_FLOW_SOCKETS)])
     FUNCTION = "while_loop_close"
 
@@ -188,7 +188,8 @@ class ForEachOpen:
                 "total": ("INT", {"default": 1, "min": 1, "max": 1000, "step": 1, "tooltip": "总循环次数"}),
             },
             "optional": {
-                "initial_value1": (any_type,)
+                # 必须声明全部，否者循环时只有第一个值能正确传递
+                "initial_value%d" % i: (any_type,) for i in range(1, NUM_FLOW_SOCKETS)
             },
             "hidden": {
                 "initial_value0": (any_type,)
@@ -213,7 +214,7 @@ class ForEachOpen:
         initial_value_num = find_max_initial_value_number(kwargs, "initial_value")
 
         # 好像没啥用
-        # while_open = graph.node("WhileLoopOpen", condition=remaining, initial_value0=total, **{("initial_value%d" % i): kwargs.get("initial_value%d" % i, None) for i in range(1, NUM_FLOW_SOCKETS)})
+        # while_open = graph.node("WhileLoopOpen", condition=total, initial_value0=index, **{("initial_value%d" % i): kwargs.get("initial_value%d" % i, None) for i in range(1, initial_value_num + 1)})
 
         outputs = [kwargs.get("initial_value%d" % i, None) for i in range(1, initial_value_num + 1)]
         return {
@@ -230,7 +231,8 @@ class ForEachClose:
                 "flow_control": ("FLOW_CONTROL", {"rawLink": True}),
             },
             "optional": {
-                "initial_value1": (any_type, {"rawLink": True})
+                # 必须声明全部，否者循环时只有第一个值能正确传递
+                "initial_value%d" % i: (any_type, {"rawLink": True}) for i in range(1, NUM_FLOW_SOCKETS)
             },
         }
 
