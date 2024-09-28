@@ -14,6 +14,71 @@ import('/scripts/ui/components/splitButton.js').then(module => {
     // console.error('模块导入失败:', error);
 });
 
+/**
+ * v2是否大于v1
+ * <br/>
+ * 1.0.0-alpha < 1.0.0-alpha.1 < 1.0.0-beta < 1.0.0-beta.2 < 1.0.0-beta.11 < 1.0.0-rc.1 < 1.0.0 < 2.0.0 < 2.1.0 < 2.1.1
+ * <br/>
+ * code from: https://segmentfault.com/a/1190000044959793
+ * @param v1
+ * @param v2
+ * @returns {boolean}
+ */
+function compareVersion(v1, v2) {
+  function* getStepVersion(v) {
+    const matchReg = /(\.|\-)/; // 匹配到任意一项，则返回分段的版本号
+    // 将先行版本号，转换成数字，直接比大小
+    const specialVersionTransObj = {
+      alpha: -3,
+      beta: -2,
+      rc: -1,
+    };
+    let tmp = ""; // 存储每段版本的值
+    for (let i = 0; i <= v.length - 1; i++) {
+      let item = v[i];
+      if (matchReg.test(item)) {
+        yield specialVersionTransObj[tmp] || tmp;
+        tmp = "";
+      } else {
+        tmp += item;
+      }
+    }
+
+    // 遍历至最后一项，没有匹配到.-也要返回结果
+    if (tmp) {
+      yield specialVersionTransObj[tmp] || tmp;
+    }
+  }
+
+  const v1Iterator = getStepVersion(v1);
+  const v2Iterator = getStepVersion(v2);
+
+  let isEnd = false;
+  let isHighLevel = false;
+    // 每次遍历相当于，2个版本号分段间的比较
+  while (!isEnd) {
+    const item1 = v1Iterator.next();
+    const item2 = v2Iterator.next();
+    item1.value = item1.value || 0;
+    item2.value = item2.value || 0;
+
+    if (item1.done && item2.done) {
+        // 代表版本号一致
+      isEnd = true;
+    } else {
+      if (Number(item2.value) > Number(item1.value)) {
+        // v2 版本大于 v1
+        isHighLevel = true;
+        isEnd = true;
+      } else if (Number(item2.value) < Number(item1.value)) {
+        // v2 版本小于 v1
+        isHighLevel = false;
+        isEnd = true;
+      }
+    }
+  }
+  return isHighLevel;
+}
 
 
 const style = `
@@ -236,7 +301,7 @@ class EasyApiWorkflows {
 			let copyButton = new ComfySplitButton(
 				{
 					primary: getCopyButton(),
-					mode: "hover",
+					mode: !!app.menu.saveButton ? "hover" : "click",
 					position: "absolute",
 				},
 				getCopyButton("Copy"),
@@ -272,9 +337,13 @@ class EasyApiWorkflows {
 					app,
 				}),
 			);
-			app.menu.saveButton.element.after(copyButton.element);
+			if (!!app.menu.saveButton) {
+				app.menu.saveButton.element.after(copyButton.element);
+			} else {
+				// version>=1.3.0
+				app.menu.actionsGroup.append(copyButton.element);
+			}
 
-			let oldItems = app.menu.saveButton.items;
 			let exportEasyApiButton = new ComfyButton({
 				icon: "api",
 				content: "Export to Base64 (API Format)",
@@ -309,8 +378,14 @@ class EasyApiWorkflows {
 				visibilitySetting: { id: "Comfy.DevMode", showValue: true },
 				app,
 			})
-			oldItems.push(exportEasyApiButton);
-			app.menu.saveButton.items = oldItems;
+			if (!!app.menu.saveButton) {
+				let oldItems = app.menu.saveButton.items;
+				oldItems.push(exportEasyApiButton);
+				app.menu.saveButton.items = oldItems;
+			} else {
+				// version>=1.3.0
+				// app.menu.actionsGroup.append(copyButton.element);
+			}
 		}
 
 		const handleFile = app.handleFile;

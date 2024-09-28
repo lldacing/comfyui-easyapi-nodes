@@ -1,3 +1,4 @@
+import simplejson
 import torch
 
 from comfy.model_patcher import ModelPatcher
@@ -521,6 +522,79 @@ class StringArea:
         return (value,)
 
 
+class ConvertTypeToAny:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {"any": (any_type, {"forceInput": True})},
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("any",)
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/Utils"
+
+    def execute(self, any):
+        return (any,)
+
+
+class LoadJsonStrToList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "json_str": ("STRING", {"default": "", "multiline": True}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST",)
+    CATEGORY = "EasyApi/Utils"
+    FUNCTION = "load_json"
+
+    def load_json(self, json_str: str):
+        if len(json_str.strip()) == 0:
+            return ([{}],)
+        json = simplejson.loads(json_str)
+        if isinstance(json, list):
+            return (json,)
+        else:
+            return ([json],)
+
+
+class GetValueFromJsonObj:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "json": (any_type, {"forceInput": True, "tooltip": "json对象(非数组类型)"}),
+                "key": ("STRING", {"default": ""}),
+                "to_type": (["default", "str", "int", "float", "bool"], {"default": "default"}),
+            },
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("any",)
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/Utils"
+
+    def execute(self, json, key, to_type):
+        if isinstance(json, dict) and key in json:
+            if to_type == "str":
+                return (str(json[key]),)
+            if to_type == "int":
+                return (int(json[key]),)
+            if to_type == "float":
+                return (float(json[key]),)
+            if to_type == "bool":
+                return (bool(json[key]),)
+            return (json[key],)
+        return (None,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -542,6 +616,9 @@ NODE_CLASS_MAPPINGS = {
     "IndexOfList": IndexOfList,
     "IndexesOfList": IndexesOfList,
     "StringArea": StringArea,
+    "ConvertTypeToAny": ConvertTypeToAny,
+    "GetValueFromJsonObj": GetValueFromJsonObj,
+    "LoadJsonStrToList": LoadJsonStrToList,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -566,4 +643,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "IndexOfList": "IndexOfList",
     "IndexesOfList": "IndexesOfList",
     "StringArea": "StringArea",
+    "ConvertTypeToAny": "ConvertTypeToAny",
+    "GetValueFromJsonObj": "GetValueFromJsonObj",
+    "LoadJsonStrToList": "LoadJsonStrToList",
 }

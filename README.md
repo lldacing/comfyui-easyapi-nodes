@@ -2,6 +2,9 @@
 针对api接口开发补充的一些自定义节点和功能。
 
 转成base64的节点都是输出节点，websocket消息中会包含base64Images和base64Type属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
+
+Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
+
 ## 安装
 - 方式1：通过ComfyUI-Manager安装
 - 方式2：在ComfyUI安装目录根目录下打开命令行终端，执行以下命令
@@ -60,8 +63,8 @@
 | StringArea            | 字符串文本框（多行输入区域）                                                                                                                                             |                                                                                                                                                         |
 | ForEachOpen           | 循环开始节点                                                                                                                                                     |                                                                                                                                                         |
 | ForEachClose          | 循环结束节点                                                                                                                                                     |                                                                                                                                                         |
-
-Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
+| LoadJsonStrToList     | json字符串转换为对象列表                                                                                                                                             |                                                                                                                                                     |                                                                                                                                                         |
+| GetValueFromJsonObj   | 从对象中获取指定key的值                                                                                                                                              |                                                                                                                                                         |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -72,6 +75,9 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![save api extended](example/example_3.png)
 
 ## 更新记录
+### 2024-09-26
+- 新增节点：GetValueFromJsonObj、 LoadJsonStrToList 
+
 ### 2024-09-25 [示例](example/example_4.png)
 - 新增节点：ForEachOpen、 ForEachClose 
 
