@@ -984,6 +984,12 @@ class EasyApiWorkflows {
 			if (newNodeId > app.graph.last_node_id) {
 				app.graph.last_node_id = newNodeId;
 			}
+
+			if(!!node.badges) {
+				node.badges.forEach((badge) => {
+					badge().text = badge().text.replace(/^#\d+/g, `#${node.id}`)
+				})
+			}
 		}
 	}
 
