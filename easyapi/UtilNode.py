@@ -595,6 +595,36 @@ class GetValueFromJsonObj:
         return (None,)
 
 
+class FilterValueForList:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "lst": ("LIST", {"forceInput": True, "tooltip": "Object列表，如[{\"name\": \"\"}]"}),
+                "key": ("STRING", {"default": ""}),
+                "value": ("STRING", {"default": ""}),
+            }
+        }
+
+    RETURN_TYPES = ("LIST",)
+    RETURN_NAMES = ("LIST",)
+    OUTPUT_TOOLTIPS = ("符合过滤条件的列表", )
+
+    FUNCTION = "execute"
+
+    CATEGORY = "EasyApi/Utils"
+
+    DESCRIPTION = "根据key和value过滤出列表中符合条件的元素，返回符合条件的元素列表，如果找不到符合条件的元素则返回None"
+
+    def execute(self, lst, key, value):
+        # 过滤出lst中key等于value的元素列表，如果不存在相等的元素则返回None
+        filtered = [i for i in lst if key in i and i[key] == value]
+        if len(filtered) == 0:
+            return (None,)
+
+        return (filtered,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -619,6 +649,7 @@ NODE_CLASS_MAPPINGS = {
     "ConvertTypeToAny": ConvertTypeToAny,
     "GetValueFromJsonObj": GetValueFromJsonObj,
     "LoadJsonStrToList": LoadJsonStrToList,
+    "FilterValueForList": FilterValueForList,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -646,4 +677,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ConvertTypeToAny": "ConvertTypeToAny",
     "GetValueFromJsonObj": "GetValueFromJsonObj",
     "LoadJsonStrToList": "LoadJsonStrToList",
+    "FilterValueForList": "FilterValueForList",
 }
