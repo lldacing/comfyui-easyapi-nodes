@@ -555,7 +555,7 @@ class LoadJsonStrToList:
 
     def load_json(self, json_str: str):
         if len(json_str.strip()) == 0:
-            return ([{}],)
+            return ([],)
         json = simplejson.loads(json_str)
         if isinstance(json, list):
             return (json,)
