@@ -1,9 +1,13 @@
 import base64
 import copy
 import io
+import os
+
 import numpy as np
 import torch
-from PIL import ImageOps, Image
+from PIL import ImageOps, Image, ImageSequence
+
+import node_helpers
 from nodes import LoadImage
 from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
@@ -340,6 +344,108 @@ class LoadImageToBase64(LoadImage):
         return encoded_image, img, mask
 
 
+class LoadImageFromLocalPath:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required":
+                    {
+                        "image_path": ("STRING", {"default": ""},)
+                    },
+                }
+
+    CATEGORY = "EasyApi/Image"
+
+    RETURN_TYPES = ("IMAGE", "MASK")
+    FUNCTION = "load_image"
+    def load_image(self, image_path):
+
+        img = node_helpers.pillow(Image.open, image_path)
+
+        output_images = []
+        output_masks = []
+        w, h = None, None
+
+        excluded_formats = ['MPO']
+        # 遍历图像的每一帧
+        for i in ImageSequence.Iterator(img):
+            # 旋转图像
+            i = node_helpers.pillow(ImageOps.exif_transpose, i)
+
+            if i.mode == 'I':
+                i = i.point(lambda i: i * (1 / 255))
+            # 将图像转换为RGB格式
+            image = i.convert("RGB")
+
+            if len(output_images) == 0:
+                w = image.size[0]
+                h = image.size[1]
+
+            if image.size[0] != w or image.size[1] != h:
+                continue
+
+            # 将图像转换为浮点数组 (H,W,Channel)
+            image = np.array(image).astype(np.float32) / 255.0
+            # 先把图片转成3维张量，并再在最前面添加一个维度，变成4维(1, H, W,Channel)
+            image = torch.from_numpy(image)[None,]
+            # 如果图像包含alpha通道，则将其转换为掩码
+            if 'A' in i.getbands():
+                # 计算后结果数组中透明像素会是0
+                mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+                # 把数组中透明像素设为1
+                mask = 1. - torch.from_numpy(mask)
+            else:
+                # 否则，创建一个64x64的零张量作为掩码
+                mask = torch.zeros((64, 64,), dtype=torch.float32, device="cpu")
+            # 将图像和掩码添加到输出列表中
+            output_images.append(image)
+            output_masks.append(mask.unsqueeze(0))
+
+        if len(output_images) > 1 and img.format not in excluded_formats:
+            # 如果有多个图像，则将它们按维度0拼接在一起
+            output_image = torch.cat(output_images, dim=0)
+            output_mask = torch.cat(output_masks, dim=0)
+        # 否则，返回单个图像和掩码
+        else:
+            output_image = output_images[0]
+            output_mask = output_masks[0]
+        # 返回输出图像和掩码
+        return (output_image, output_mask)
+
+
+class LoadMaskFromLocalPath:
+    _color_channels = ["alpha", "red", "green", "blue"]
+    @classmethod
+    def INPUT_TYPES(s):
+        return {"required":
+                    {
+                        "image_path": ("STRING", {"default": ""}),
+                        "channel": (s._color_channels, ),
+                    }
+                }
+
+    CATEGORY = "EasyApi/Image"
+
+    RETURN_TYPES = ("MASK",)
+    FUNCTION = "load_mask"
+    def load_mask(self, image_path, channel):
+        i = node_helpers.pillow(Image.open, image_path)
+        i = node_helpers.pillow(ImageOps.exif_transpose, i)
+        if i.getbands() != ("R", "G", "B", "A"):
+            if i.mode == 'I':
+                i = i.point(lambda i: i * (1 / 255))
+            i = i.convert("RGBA")
+        mask = None
+        c = channel[0].upper()
+        if c in i.getbands():
+            mask = np.array(i.getchannel(c)).astype(np.float32) / 255.0
+            mask = torch.from_numpy(mask)
+            if c == 'A':
+                mask = 1. - mask
+        else:
+            mask = torch.zeros((64, 64), dtype=torch.float32, device="cpu")
+        return (mask.unsqueeze(0),)
+
+
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "LoadImageFromURL": LoadImageFromURL,
@@ -351,6 +457,8 @@ NODE_CLASS_MAPPINGS = {
     "MaskToBase64Image": MaskToBase64Image,
     "MaskImageToBase64": MaskImageToBase64,
     "LoadImageToBase64": LoadImageToBase64,
+    "LoadImageFromLocalPath": LoadImageFromLocalPath,
+    "LoadMaskFromLocalPath": LoadMaskFromLocalPath,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -365,4 +473,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "MaskToBase64Image": "Mask To Base64 Image",
     "MaskImageToBase64": "Mask Image To Base64",
     "LoadImageToBase64": "Load Image To Base64",
+    "LoadImageFromLocalPath": "Load Image From Local Path",
+    "LoadMaskFromLocalPath": "Load Mask From Local Path",
 }

@@ -65,7 +65,14 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 | ForEachClose           | 循环结束节点                                                                                                                                                     |
 | LoadJsonStrToList      | json字符串转换为对象列表                                                                                                                                             |
 | GetValueFromJsonObj    | 从对象中获取指定key的值                                                                                                                                              |
-| FilterValueForList     | 根据指定值过滤列表中元素                                                                                                                                               ||
+| FilterValueForList     | 根据指定值过滤列表中元素                                                                                                                                               |
+| SliceList              | 列表切片                                                                                                                                                       |
+| LoadLocalFilePath      | 列出给定路径下的文件列表                                                                                                                                               |
+| LoadImageFromLocalPath | 根据图片全路径加载图片                                                                                                                                                |
+| LoadMaskFromLocalPath  | 根据遮罩全路径加载遮罩                                                                                                                                                |                                                                                                                                                         |
+| IsNoneOrEmpty          | 判断是否为空或空字符串或空列表或空字典                                                                                                                                        |
+| IsNoneOrEmptyOptional  | 为空时返回指定值(惰性求值)，否则返回原值                                                                                                                                      |
+| EmptyOutputNode        | 空的输出类型节点                                                                                                                                                   |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -76,6 +83,9 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![save api extended](example/example_3.png)
 
 ## 更新记录
+### 2024-10-18
+- 新增节点：SliceList、LoadLocalFilePath、LoadImageFromLocalPath、LoadMaskFromLocalPath、IsNoneOrEmpty、IsNoneOrEmptyOptional、EmptyOutputNode
+
 ### 2024-09-29
 - 新增节点：FilterValueForList
 
