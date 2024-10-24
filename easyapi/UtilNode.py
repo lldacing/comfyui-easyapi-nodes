@@ -1,5 +1,7 @@
 import mimetypes
 import os
+import shutil
+from collections import defaultdict
 
 import simplejson
 import torch
@@ -187,6 +189,8 @@ class ListMerge:
 
     OUTPUT_NODE = False
     CATEGORY = "EasyApi/List"
+
+    DESCRIPTION = "合并两个列表。如 [1,2] 和 [3,4] => [1,2,3,4]"
 
     def convert(self, list_a, list_b=None):
         list = [] + list_a
@@ -679,9 +683,9 @@ class LoadLocalFilePath:
             }
         }
 
-    RETURN_TYPES = ("LIST", "INT",)
-    RETURN_NAMES = ("paths", "count",)
-    OUTPUT_TOOLTIPS = ("文件路径列表，若过滤不到文件返回空列表", "文件个数",)
+    RETURN_TYPES = ("LIST", "INT", "LIST", "STRING", )
+    RETURN_NAMES = ("paths", "count", "relative_path", "base_dir", )
+    OUTPUT_TOOLTIPS = ("文件路径列表，若过滤不到文件返回空列表", "文件个数", "文件相对路径列表", "保存的根目录", )
 
     FUNCTION = "get_paths"
 
@@ -696,23 +700,31 @@ class LoadLocalFilePath:
     }
 
     @classmethod
-    def recursive_file_paths(cls, directory, max_depth, file_type, file_suffix, current_depth=1):
+    def recursive_file_paths(cls, directory, max_depth, file_type, file_suffix, base_directory=None, current_depth=1):
         """
         获取指定目录及其子目录中的图片文件路径（深度优先遍历）
 
         参数:
             directory (str): 要遍历的目录路径
             max_depth (int): 最大遍历层级
+            file_type (str): 文件类型（如 'image'）
+            file_suffix (str): 文件后缀（多个后缀用 '|' 分隔）
+            base_directory (str): 根目录路径（用于计算相对路径，默认为 None）
             current_depth (int): 当前遍历层级（默认值为1）
 
         返回:
             List[str]: 图片文件路径列表
+            List[str]: 图片文件相对路径列表
         """
 
         image_paths = []
+        relative_image_paths = []
+
+        if base_directory is None:
+            base_directory = directory
 
         if current_depth > max_depth:
-            return image_paths
+            return image_paths, relative_image_paths
 
         with os.scandir(directory) as it:
             for item in it:
@@ -721,20 +733,26 @@ class LoadLocalFilePath:
                         suffixes = [s.strip().lower() for s in file_suffix.split('|')]
                         if any(item.name.lower().endswith(suffix) for suffix in suffixes):
                             image_paths.append(item.path)
+                            relative_image_paths.append(os.path.relpath(item.path, base_directory))
                     elif file_type:
                         mime_type, _ = mimetypes.guess_type(item.path)
                         if mime_type in cls.mime_types_dict.get(file_type, set()):
                             image_paths.append(item.path)
+                            relative_image_paths.append(os.path.relpath(item.path, base_directory))
                 elif item.is_dir():
-                    image_paths.extend(cls.recursive_file_paths(item.path, max_depth, file_type, file_suffix, current_depth + 1))
-        return image_paths
+                    sub_image_paths, sub_relative_image_paths = cls.recursive_file_paths(
+                        item.path, max_depth, file_type, file_suffix, base_directory, current_depth + 1
+                    )
+                    image_paths.extend(sub_image_paths)
+                    relative_image_paths.extend(sub_relative_image_paths)
+        return image_paths, relative_image_paths
 
     def get_paths(self, directory, max_depth, file_type, file_suffix):
         if directory is None or len(directory.strip()) == 0:
             directory = folder_paths.get_input_directory()
-        image_paths = self.recursive_file_paths(directory, max_depth, file_type, file_suffix)
+        image_paths, relative_image_paths = self.recursive_file_paths(directory, max_depth, file_type, file_suffix)
 
-        return image_paths, len(image_paths),
+        return image_paths, len(image_paths), relative_image_paths, directory,
 
 
 class IsNoneOrEmpty:
@@ -822,6 +840,112 @@ class EmptyOutputNode:
         return ()
 
 
+class SaveTextToFileByImagePath:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "image_path": ("STRING", {"forceInput": False}),
+                "text": ("STRING", {"forceInput": False, "dynamicPrompts": False, "multiline": True}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text_path",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "把文本内容保存到图片路径同名的txt文件中"
+
+    def execute(self, image_path, text):
+        # 校验图片路径是否存在
+        if not os.path.isfile(image_path):
+            raise FileNotFoundError(f"Image file not found: {image_path}")
+
+        # 校验文本内容是否为空
+        if not text:
+            raise ValueError("The text cannot be empty")
+
+        # 获取图片文件名，不包括扩展名
+        base_name = os.path.splitext(os.path.basename(image_path))[0]
+        # 创建txt文件路径
+        dir_name = os.path.dirname(image_path)
+        # 创建txt文件路径
+        txt_path = os.path.join(dir_name, f"{base_name}.txt")
+
+        # 写入文本内容到txt文件
+        with open(txt_path, 'w', encoding='utf-8') as file:
+            file.write(text)
+
+        return (txt_path,)
+
+
+class CopyAndRenameFiles:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "directory": ("STRING", {"forceInput": False, "tooltip": "源目录"}),
+                "save_directory": ("STRING", {"default": "", "tooltip": "目标目录，为空时重命名原文件"}),
+                "prefix": ("STRING", {"default": "", "tooltip": "新文件名前缀"}),
+                "name_to_num": ("BOOLEAN", {"default": True, "tooltip": "后缀是否使用在对应目录的序号"}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("save_directory", )
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "把给定目录下的文件复制到指定目录"
+
+    def execute(self, directory, save_directory, prefix, name_to_num):
+        """
+        递归遍历目录及其子目录中的文件，重命名或复制并重命名文件，添加自定义前缀。
+        如果 save_directory 为空，重命名原文件；否则，复制并重命名到目标目录，并保持层级结构，文件名为所在目录的计数编号。
+
+        :param directory: 需要重命名文件的目录路径
+        :param prefix: 自定义前缀
+        :param save_directory: 保存重命名文件的目录路径（可以为空）
+        :param name_to_num: 重命名文件名为数字
+        """
+        count_dict = defaultdict(int)  # 用于存储每个目录的计数器
+
+        for root, _, files in os.walk(directory):
+            for filename in files:
+                old_path = os.path.join(root, filename)
+                if os.path.isfile(old_path):
+                    count_dict[root] += 1  # 增加当前目录的计数器
+                    ext = os.path.splitext(filename)[1]
+                    if prefix and len(prefix.strip()) > 0:
+                        if name_to_num:
+                            new_filename = f"{prefix.strip()}_{count_dict[root]}"
+                        else:
+                            new_filename = f"{prefix.strip()}_{filename}"
+
+                    else:
+                        if name_to_num:
+                            new_filename = f"{count_dict[root]}{ext}"
+                        else:
+                            new_filename = filename
+
+                    # 如果 save_directory 不为空，复制并重命名到目标目录，并保持层级结构
+                    if save_directory and len(save_directory.strip()) > 0:
+                        # 计算保存文件的目标目录
+                        relative_path = os.path.relpath(root, directory)
+                        target_dir = os.path.join(save_directory, relative_path)
+                        if not os.path.exists(target_dir):
+                            os.makedirs(target_dir)
+                        new_path = os.path.join(target_dir, new_filename)
+                        shutil.copyfile(old_path, new_path)
+                        print(f"复制并重命名: {old_path} -> {new_path}")
+                    else:
+                        # 否则重命名原文件
+                        new_path = os.path.join(root, new_filename)
+                        os.rename(old_path, new_path)
+                        print(f"重命名: {old_path} -> {new_path}")
+
+        return (save_directory, )
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -852,6 +976,8 @@ NODE_CLASS_MAPPINGS = {
     "IsNoneOrEmpty": IsNoneOrEmpty,
     "IsNoneOrEmptyOptional": IsNoneOrEmptyOptional,
     "EmptyOutputNode": EmptyOutputNode,
+    "SaveTextToFileByImagePath": SaveTextToFileByImagePath,
+    "CopyAndRenameFiles": CopyAndRenameFiles,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -885,4 +1011,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "IsNoneOrEmpty": "IsNoneOrEmpty",
     "IsNoneOrEmptyOptional": "IsNoneOrEmptyOptional",
     "EmptyOutputNode": "EmptyOutputNode",
+    "SaveTextToFileByImagePath": "SaveTextToFileByImagePath",
+    "CopyAndRenameFiles": "CopyAndRenameFiles",
 }

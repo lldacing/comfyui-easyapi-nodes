@@ -7,6 +7,7 @@ import numpy as np
 import torch
 from PIL import ImageOps, Image, ImageSequence
 
+import folder_paths
 import node_helpers
 from nodes import LoadImage
 from comfy.cli_args import args
@@ -446,6 +447,158 @@ class LoadMaskFromLocalPath:
         return (mask.unsqueeze(0),)
 
 
+class SaveImagesWithoutOutput:
+    """
+    保存图片，非输出节点
+    """
+
+    def __init__(self):
+        self.compress_level = 4
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "images": ("IMAGE",),
+                "filename_prefix": ("STRING", {"default": "ComfyUI",
+                                               "tooltip": "要保存的文件的前缀。可以使用格式化信息，如%date:yyyy-MM-dd%或%Empty Latent Image.width%"}),
+                "output_dir": ("STRING", {"default": "", "tooltip": "若为空，存放到output目录"}),
+            },
+            "optional": {
+                "addMetadata": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
+            },
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+        }
+
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("file_paths",)
+    OUTPUT_TOOLTIPS = ("保存的图片路径列表",)
+
+    FUNCTION = "save_images"
+
+    CATEGORY = "EasyApi/Image"
+
+    DESCRIPTION = "保存图像到指定目录，可根据返回的文件路径进行后续操作，此节点为非输出节点，适合批量处理和用于惰性求值的前置节点"
+    OUTPUT_NODE = False
+
+    def save_images(self, images, output_dir, filename_prefix="ComfyUI", addMetadata=False, prompt=None, extra_pnginfo=None):
+        imageList = list()
+        if not isinstance(images, list):
+            imageList.append(images)
+        else:
+            imageList = images
+
+        if output_dir is None or len(output_dir.strip()) == 0:
+            output_dir = folder_paths.get_output_directory()
+
+        results = list()
+        for (index, images) in enumerate(imageList):
+            for (batch_number, image) in enumerate(images):
+                full_output_folder, filename, counter, subfolder, curr_filename_prefix = folder_paths.get_save_image_path(
+                    filename_prefix, output_dir, image.shape[1], image.shape[0])
+                img = tensor_to_pil(image)
+                metadata = None
+                if not args.disable_metadata and addMetadata:
+                    metadata = PngInfo()
+                    if prompt is not None:
+                        metadata.add_text("prompt", json.dumps(prompt))
+                    if extra_pnginfo is not None:
+                        for x in extra_pnginfo:
+                            metadata.add_text(x, json.dumps(extra_pnginfo[x]))
+
+                filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
+                file = f"{filename_with_batch_num}_{counter:05}_.png"
+                image_save_path = os.path.join(full_output_folder, file)
+                img.save(image_save_path, pnginfo=metadata, compress_level=self.compress_level)
+                results.append(image_save_path)
+                counter += 1
+
+        return (results,)
+
+
+class SaveSingleImageWithoutOutput:
+    """
+    保存图片，非输出节点
+    """
+
+    def __init__(self):
+        self.compress_level = 4
+
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+                "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "要保存的文件的前缀。可以使用格式化信息，如%date:yyyy-MM-dd%或%Empty Latent Image.width%"}),
+                "full_file_name": ("STRING", {"default": "", "tooltip": "完整的相对路径文件名，包括扩展名。若为空，则使用filename_prefix生成带序号的文件名"}),
+                "output_dir": ("STRING", {"default": "", "tooltip": "目标目录(绝对路径)，不会自动创建。若为空，存放到output目录"}),
+            },
+            "optional": {
+                "addMetadata": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
+            },
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+        }
+
+    RETURN_TYPES = ("STRING", )
+    RETURN_NAMES = ("file_path",)
+
+    FUNCTION = "save_image"
+
+    CATEGORY = "EasyApi/Image"
+
+    DESCRIPTION = "保存图像到指定目录，可根据返回的文件路径进行后续操作，此节点为非输出节点，适合循环批处理和用于惰性求值的前置节点。只会处理一个"
+    OUTPUT_NODE = False
+
+    def save_image(self, image, full_file_name, output_dir, filename_prefix="ComfyUI", addMetadata=False, prompt=None, extra_pnginfo=None):
+        imageList = list()
+        if not isinstance(image, list):
+            imageList.append(image)
+        else:
+            imageList = image
+
+        if output_dir is None or len(output_dir.strip()) == 0:
+            output_dir = folder_paths.get_output_directory()
+
+        if not os.path.isdir(output_dir) or not os.path.isabs(output_dir):
+            raise RuntimeError(f"目录 {output_dir} 不存在")
+
+        if len(imageList) > 0:
+            image = imageList[0]
+            for (batch_number, image) in enumerate(image):
+                img = tensor_to_pil(image)
+                metadata = None
+                if not args.disable_metadata and addMetadata:
+                    metadata = PngInfo()
+                    if prompt is not None:
+                        metadata.add_text("prompt", json.dumps(prompt))
+                    if extra_pnginfo is not None:
+                        for x in extra_pnginfo:
+                            metadata.add_text(x, json.dumps(extra_pnginfo[x]))
+
+                if full_file_name is not None and len(full_file_name.strip()) > 0:
+                    # full_file_name是相对路径，添加校验，并自动创建子目录
+                    full_path = os.path.join(output_dir, full_file_name)
+                    full_normpath_name = os.path.normpath(full_path)
+                    file_dir = os.path.dirname(full_normpath_name)
+                    # 确保路径是out_dir 的子目录
+                    if not os.path.isabs(file_dir) or not file_dir.startswith(output_dir):
+                        raise RuntimeError(f"文件 {full_file_name} 不在 {output_dir} 目录下")
+                    if not os.path.isdir(file_dir):
+                        os.makedirs(file_dir, exist_ok=True)
+                    image_save_path = full_normpath_name
+                else:
+                    full_output_folder, filename, counter, subfolder, curr_filename_prefix = folder_paths.get_save_image_path(
+                        filename_prefix, output_dir, image.shape[1], image.shape[0])
+                    filename_with_batch_num = filename.replace("%batch_num%", str(batch_number))
+                    file = f"{filename_with_batch_num}_{counter:05}_.png"
+                    image_save_path = os.path.join(full_output_folder, file)
+
+                img.save(image_save_path, pnginfo=metadata, compress_level=self.compress_level)
+                return image_save_path,
+
+        return (None,)
+
+
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "LoadImageFromURL": LoadImageFromURL,
@@ -459,6 +612,8 @@ NODE_CLASS_MAPPINGS = {
     "LoadImageToBase64": LoadImageToBase64,
     "LoadImageFromLocalPath": LoadImageFromLocalPath,
     "LoadMaskFromLocalPath": LoadMaskFromLocalPath,
+    "SaveImagesWithoutOutput": SaveImagesWithoutOutput,
+    "SaveSingleImageWithoutOutput": SaveSingleImageWithoutOutput,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -475,4 +630,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadImageToBase64": "Load Image To Base64",
     "LoadImageFromLocalPath": "Load Image From Local Path",
     "LoadMaskFromLocalPath": "Load Mask From Local Path",
+    "SaveImagesWithoutOutput": "Save Images Without Output",
+    "SaveSingleImageWithoutOutput": "Save Single Image Without Output",
 }
