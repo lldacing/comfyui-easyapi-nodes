@@ -487,7 +487,7 @@ class IndexOfList:
     DESCRIPTION = "根据索引过滤，若index >= len(lst)，返回None"
 
     def execute(self, lst, index):
-        if isinstance(lst, list) and len(lst) > index:
+        if isinstance(lst, (list, tuple)) and len(lst) > index:
             return (lst[index], )
         return (None, )
 
@@ -513,7 +513,7 @@ class IndexesOfList:
 
     def execute(self, lst, index):
         indices = [int(i.strip()) for i in index.split(",")]
-        if isinstance(lst, list):
+        if isinstance(lst, (list, tuple)):
             filtered = [lst[i] for i in indices if 0 <= i < len(lst)]
             return (filtered,)
         return (None, )
@@ -542,7 +542,7 @@ class SliceList:
     DESCRIPTION = "列表切片, lst入参不是list时，返回None"
 
     def execute(self, lst, start_index, step, end_index, reverse):
-        if isinstance(lst, list):
+        if isinstance(lst, (list, tuple)):
             sliceList = lst[start_index:end_index:step]
             if reverse:
                 sliceList.reverse()
@@ -603,7 +603,7 @@ class LoadJsonStrToList:
         if len(json_str.strip()) == 0:
             return ([],)
         json = simplejson.loads(json_str)
-        if isinstance(json, list):
+        if isinstance(json, (list, tuple)):
             return (json,)
         else:
             return ([json],)
@@ -773,7 +773,7 @@ class IsNoneOrEmpty:
     def execute(self, any):
         if any is None:
             return True,
-        if isinstance(any, list):
+        if isinstance(any, (list, tuple)):
             return (True if len(any) == 0 else False,)
         if isinstance(any, str):
             return (True if len(any.strip()) == 0 else False,)
@@ -803,7 +803,7 @@ class IsNoneOrEmptyOptional:
     def execute(self, any, default=None):
         if any is None:
             return default,
-        if isinstance(any, list):
+        if isinstance(any, (list, tuple)):
             return (default if len(any) == 0 else any,)
         if isinstance(any, str):
             return (default if len(any.strip()) == 0 else any,)
@@ -814,7 +814,7 @@ class IsNoneOrEmptyOptional:
     def check_lazy_status(self, any, default=None):
         if any is None:
             return ["default"]
-        if isinstance(any, list):
+        if isinstance(any, (list, tuple)):
             return ["default"] if len(any) == 0 else ["any"]
         if isinstance(any, str):
             return ["default"] if len(any.strip()) == 0 else ["any"]
