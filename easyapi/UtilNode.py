@@ -770,7 +770,7 @@ class IsNoneOrEmpty:
     CATEGORY = "EasyApi/Utils"
     DESCRIPTION = "判断输入是否为None、空列表、空字符串(trim后判断)、空字典"
 
-    def execute(self, any):
+    def execute(self, any=None):
         if any is None:
             return True,
         if isinstance(any, (list, tuple)):
@@ -779,7 +779,7 @@ class IsNoneOrEmpty:
             return (True if len(any.strip()) == 0 else False,)
         if isinstance(any, dict):
             return (True if len(any) == 0 else False,)
-        return False
+        return False,
 
 
 class IsNoneOrEmptyOptional:
@@ -800,7 +800,7 @@ class IsNoneOrEmptyOptional:
     CATEGORY = "EasyApi/Utils"
     DESCRIPTION = "判断输入any是否为None、空列表、空字符串(trim后判断)、空字典，若为true，返回default的值，否则返回输入值"
 
-    def execute(self, any, default=None):
+    def execute(self, any=None, default=None):
         if any is None:
             return default,
         if isinstance(any, (list, tuple)):
@@ -811,7 +811,7 @@ class IsNoneOrEmptyOptional:
             return (default if len(any) == 0 else any,)
         return (any,)
 
-    def check_lazy_status(self, any, default=None):
+    def check_lazy_status(self, any=None, default=None):
         if any is None:
             return ["default"]
         if isinstance(any, (list, tuple)):
