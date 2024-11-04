@@ -3,7 +3,7 @@
 
 转成base64的节点都是输出节点，websocket消息中会包含base64Images和base64Type属性（具体格式请查看ImageNode.py中的ImageToBase64Advanced类源代码，或者自己搭建简单流程运行在浏览器开发者工具-->网络中查看）
 
-Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromUrl加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
+Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带宽可能也会有瓶颈，条件允许可以把图片上传到OSS服务器得到URL，然后用LoadImageFromURL加载，由于无相关OSS账号，上传OSS节点需自行编写，暂不支持。
 
 ## 安装
 - 方式1：通过ComfyUI-Manager安装
@@ -22,62 +22,67 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ```
 
 ## 节点
-| 名称                           | 说明                                                                                                                                                         |
-|------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| LoadImageFromURL             | 从网络地址加载图片，一行代表一个图片                                                                                                                                         |
-| LoadMaskFromURL              | 从网络地址加载遮罩，一行代表一个                                                                                                                                           |
-| Base64ToImage                | 把图片base64字符串转成图片                                                                                                                                           |
-| Base64ToMask                 | 把遮罩图片base64字符串转成遮罩                                                                                                                                         |
-| ImageToBase64Advanced        | 把图片转成base64字符串, 可以选择图片类型(image, mask) ，方便接口调用判断                                                                                                            |
-| ImageToBase64                | 把图片转成base64字符串(imageType=["image"])                                                                                                                        |
-| MaskToBase64Image            | 把遮罩转成对应图片的base64字符串(imageType=["mask"])                                                                                                                    |
-| MaskImageToBase64            | 把遮罩图片转成base64字符串(imageType=["mask"])                                                                                                                       |
-| LoadImageToBase64            | 加载本地图片转成base64字符串                                                                                                                                          |
-| SamAutoMaskSEGS              | 得到图片所有语义分割的coco或uncompress_rle格式。<br/>配合ComfyUI-Impact-Pack的SAMLoader或comfyui_segment_anything的SAMModelLoader。<br/>但是如果使用hq模型，必须使用comfyui_segment_anything |
-| InsightFaceBBOXDetect        | 为图片中的人脸添加序号和区域框                                                                                                                                            |
-| ColorPicker                  | 颜色选择器                                                                                                                                                      |
-| IntToNumber                  | 整型转数字                                                                                                                                                      |
-| StringToList                 | 字符串转列表                                                                                                                                                     |
-| IntToList                    | 整型转列表                                                                                                                                                      |
-| ListMerge                    | 列表合并                                                                                                                                                       |
-| JoinList                     | 列表根据指定分隔符连接                                                                                                                                                |
-| ShowString                   | 显示字符串(可指定消息中key值)                                                                                                                                          |
-| ShowInt                      | 显示整型(可指定消息中key值)                                                                                                                                           |
-| ShowFloat                    | 显示浮点型(可指定消息中key值)                                                                                                                                          |
-| ShowNumber                   | 显示数字(可指定消息中key值)                                                                                                                                           |
-| ShowBoolean                  | 显示布尔值(可指定消息中key值)                                                                                                                                          |
-| ImageEqual                   | 图片是否相等（可用于通过判断遮罩图是否全黑来判定是否有遮罩）                                                                                                                             |
-| SDBaseVerNumber              | 判断SD大模型版本是1.5还是xl                                                                                                                                          |
-| ListWrapper                  | 包装成列表（任意类型）                                                                                                                                                |
-| ListUnWrapper                | 转成输出列表，后面连接的节点会把每个元素执行一遍，实现类似遍历效果                                                                                                                          |
-| BboxToCropData               | bbox转cropData，方便接入was节点使用                                                                                                                                  |
-| BboxToBbox                   | bbox两种格式(x,y,w,h)和(x1,y1,x2,y2)的相互转换                                                                                                                       |
-| BboxesToBboxes               | BboxToBbox节点的列表版本                                                                                                                                          |
-| SelectBbox                   | 从Bbox列表中选择一个                                                                                                                                               |
-| SelectBboxes                 | 从Bbox列表中选择多个                                                                                                                                               |
-| CropImageByBbox              | 根据Bbox区域裁剪图片                                                                                                                                               |
-| MaskByBboxes                 | 根据Bbox列表画遮罩                                                                                                                                                |
-| SplitStringToList            | 根据分隔符把字符串拆分为某种数据类型(str/int/float/bool)的列表                                                                                                                  |
-| IndexOfList                  | 从列表中获取指定位置的元素                                                                                                                                              |
-| IndexesOfList                | 从列表中筛选出指定位置的元素列表                                                                                                                                           |
-| StringArea                   | 字符串文本框（多行输入区域）                                                                                                                                             |
-| ForEachOpen                  | 循环开始节点                                                                                                                                                     |
-| ForEachClose                 | 循环结束节点                                                                                                                                                     |
-| LoadJsonStrToList            | json字符串转换为对象列表                                                                                                                                             |
-| GetValueFromJsonObj          | 从对象中获取指定key的值                                                                                                                                              |
-| FilterValueForList           | 根据指定值过滤列表中元素                                                                                                                                               |
-| SliceList                    | 列表切片                                                                                                                                                       |
-| LoadLocalFilePath            | 列出给定路径下的文件列表                                                                                                                                               |
-| LoadImageFromLocalPath       | 根据图片全路径加载图片                                                                                                                                                |
-| LoadMaskFromLocalPath        | 根据遮罩全路径加载遮罩                                                                                                                                                |
-| IsNoneOrEmpty                | 判断是否为空或空字符串或空列表或空字典                                                                                                                                        |
-| IsNoneOrEmptyOptional        | 为空时返回指定值(惰性求值)，否则返回原值                                                                                                                                      |
-| EmptyOutputNode              | 空的输出类型节点                                                                                                                                                   |
-| SaveTextToFileByImagePath    | 保存文本到图片路径，以图片名作为文件名                                                                                                                                        |
-| CopyAndRenameFiles           | 复制或重命名文件                                                                                                                                                   |
-| SaveImagesWithoutOutput      | 保存图像到指定目录，不是输出类型节点，可用于循环批量跑图和作为惰性求值的前置节点                                                                                                                   |
-| SaveSingleImageWithoutOutput | 保存单个图像到指定目录，不是输出类型节点，可用于循环批量跑图和作为惰性求值的前置节点                                                                                                                 |
-| CropTargetSizeImageByBbox    | 以bbox的区域中心裁剪指定大小图片                                                                                                                                         |
+|  是否为输出节点   | 名称                           | 说明                                                                                                                                                             |
+|:----------:|------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|     ×      | LoadImageFromURL             | 从网络地址加载图片，一行代表一个图片                                                                                                                                             |
+|     ×      | LoadMaskFromURL              | 从网络地址加载遮罩，一行代表一个                                                                                                                                               |
+|     ×      | Base64ToImage                | 把图片base64字符串转成图片                                                                                                                                               |
+|     ×      | Base64ToMask                 | 把遮罩图片base64字符串转成遮罩                                                                                                                                             |
+|     ×      | ImageToBase64Advanced        | 把图片转成base64字符串, 可以选择图片类型(image, mask) ，方便接口调用判断                                                                                                                |
+|     ×      | ImageToBase64                | 把图片转成base64字符串(imageType=["image"])                                                                                                                            |
+|     √      | MaskToBase64Image            | 把遮罩转成对应图片的base64字符串(imageType=["mask"])                                                                                                                        |
+|     √      | MaskImageToBase64            | 把遮罩图片转成base64字符串(imageType=["mask"])                                                                                                                           |
+|     ×      | LoadImageToBase64            | 加载本地图片转成base64字符串                                                                                                                                              |
+|     √      | SamAutoMaskSEGS              | 得到图片所有语义分割的coco_rle或uncompress_rle格式。<br/>配合ComfyUI-Impact-Pack的SAMLoader或comfyui_segment_anything的SAMModelLoader。<br/>但是如果使用hq模型，必须使用comfyui_segment_anything |
+|     ×      | SamAutoMaskSEGSAdvanced      | 得到图片所有语义分割的coco_rle或uncompress_rle格式。可以调整sam的参数。                                                                                                               |
+|     ×      | MaskToRle                    | 遮罩图转为coco_rle或uncompress_rle格式，rle格式数据只保存二值，所以无法精准还原遮罩                                                                                                         |
+|     ×      | RleToMask                    | coco_rle或uncompress_rle格式转为遮罩，rle格式数据只保存二值，所以无法精准还原遮罩                                                                                                          |
+|     ×      | InsightFaceBBOXDetect        | 为图片中的人脸添加序号和区域框                                                                                                                                                |
+|     ×      | ColorPicker                  | 颜色选择器                                                                                                                                                          |
+|     ×      | IntToNumber                  | 整型转数字                                                                                                                                                          |
+|     ×      | StringToList                 | 字符串转列表                                                                                                                                                         |
+|     ×      | IntToList                    | 整型转列表                                                                                                                                                          |
+|     ×      | ListMerge                    | 列表合并                                                                                                                                                           |
+|     ×      | JoinList                     | 列表根据指定分隔符连接（会先把列表元素转成字符串）                                                                                                                                      |
+|     √      | ShowString                   | 显示字符串(可指定消息中key值)                                                                                                                                              |
+|     √      | ShowInt                      | 显示整型(可指定消息中key值)                                                                                                                                               |
+|     √      | ShowFloat                    | 显示浮点型(可指定消息中key值)                                                                                                                                              |
+|     √      | ShowNumber                   | 显示数字(可指定消息中key值)                                                                                                                                               |
+|     √      | ShowBoolean                  | 显示布尔值(可指定消息中key值)                                                                                                                                              |
+|     ×      | ImageEqual                   | 图片是否相等（可用于通过判断遮罩图是否全黑来判定是否有遮罩）                                                                                                                                 |
+|     ×      | SDBaseVerNumber              | 判断SD大模型版本是1.5还是xl                                                                                                                                              |
+|     ×      | ListWrapper                  | 包装成列表（任意类型）                                                                                                                                                    |
+|     ×      | ListUnWrapper                | 转成输出列表，后面连接的节点会把每个元素执行一遍，实现类似遍历效果                                                                                                                              |
+|     ×      | BboxToCropData               | bbox转cropData，方便接入was插件节点使用                                                                                                                                    |
+|     ×      | BboxToBbox                   | bbox两种格式(x,y,w,h)和(x1,y1,x2,y2)的相互转换                                                                                                                           |
+|     ×      | BboxesToBboxes               | BboxToBbox节点的列表版本                                                                                                                                              |
+|     ×      | SelectBbox                   | 从Bbox列表中选择一个                                                                                                                                                   |
+|     ×      | SelectBboxes                 | 从Bbox列表中选择多个                                                                                                                                                   |
+|     ×      | CropImageByBbox              | 根据Bbox区域裁剪图片                                                                                                                                                   |
+|     ×      | MaskByBboxes                 | 根据Bbox列表画遮罩                                                                                                                                                    |
+|     ×      | SplitStringToList            | 根据分隔符把字符串拆分为某种数据类型(str/int/float/bool)的列表                                                                                                                      |
+|     ×      | IndexOfList                  | 从列表中获取指定位置的元素                                                                                                                                                  |
+|     ×      | IndexesOfList                | 从列表中筛选出指定位置的元素列表                                                                                                                                               |
+|     ×      | StringArea                   | 字符串文本框（多行输入区域）                                                                                                                                                 |
+|     ×      | ForEachOpen                  | 循环开始节点                                                                                                                                                         |
+|     ×      | ForEachClose                 | 循环结束节点                                                                                                                                                         |
+|     ×      | LoadJsonStrToList            | json字符串转换为对象列表                                                                                                                                                 |
+|     ×      | ConvertTypeToAny             | 转换数据类型为任意类型，桥接实际具有相同数据类型参数的两节点                                                                                                                                 |
+|     ×      | GetValueFromJsonObj          | 从对象中获取指定key的值                                                                                                                                                  |
+|     ×      | FilterValueForList           | 根据指定值过滤列表中元素                                                                                                                                                   |
+|     ×      | SliceList                    | 列表切片                                                                                                                                                           |
+|     ×      | LoadLocalFilePath            | 列出给定路径下的文件列表                                                                                                                                                   |
+|     ×      | LoadImageFromLocalPath       | 根据图片全路径加载图片                                                                                                                                                    |
+|     ×      | LoadMaskFromLocalPath        | 根据遮罩全路径加载遮罩                                                                                                                                                    |
+|     ×      | IsNoneOrEmpty                | 判断是否为空或空字符串或空列表或空字典                                                                                                                                            |
+|     ×      | IsNoneOrEmptyOptional        | 为空时返回指定值(惰性求值)，否则返回原值。由于ComfyUI本体代码逻辑，非字符串会报错                                                                                                                  |
+|     √      | EmptyOutputNode              | 空的输出类型节点                                                                                                                                                       |
+|     ×      | SaveTextToFileByImagePath    | 保存文本到图片路径，以图片名作为文件名                                                                                                                                            |
+|     ×      | CopyAndRenameFiles           | 把某个目录下的文件复制到另一个目录并重命名，若目标目录为空值，则重命名原文件                                                                                                                         |
+|     ×      | SaveImagesWithoutOutput      | 保存图像到指定目录，不是输出类型节点，可用于循环批量跑图和作为惰性求值的前置节点                                                                                                                       |
+|     ×      | SaveSingleImageWithoutOutput | 保存单个图像到指定目录，不是输出类型节点，可用于循环批量跑图和作为惰性求值的前置节点                                                                                                                     |
+|     ×      | CropTargetSizeImageByBbox    | 以bbox区域中心向外裁剪指定宽高图片                                                                                                                                            |
+|     ×      | ConvertToJsonStr             | 序列化为json字符串                                                                                                                                                    |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -86,9 +91,14 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![save api extended](example/example_1.png)
   ![save api extended](example/example_2.png)
   ![save api extended](example/example_3.png)
+  ![save api extended](example/example_4.png)
+  ![save api extended](example/example_sam_mask.png)
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
+### 2024-11-04 (v1.0.9)
+- 新增节点：SamAutoMaskSEGSAdvanced、 MaskToRle、 RleToMask、 ConvertToJsonStr
+
 ### 2024-10-24 (v1.0.7)
 - 新增节点：SaveTextToFileByImagePath、 CopyAndRenameFiles、 SaveImagesWithoutOutput、 SaveSingleImageWithoutOutput、 CropTargetSizeImageByBbox
 
@@ -99,7 +109,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 - 新增节点：FilterValueForList
 
 ### 2024-09-26
-- 新增节点：GetValueFromJsonObj、 LoadJsonStrToList 
+- 新增节点：GetValueFromJsonObj、 LoadJsonStrToList、ConvertTypeToAny 
 
 ### 2024-09-25 [示例](example/example_4.png)
 - 新增节点：ForEachOpen、 ForEachClose 

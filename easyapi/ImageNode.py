@@ -461,7 +461,7 @@ class SaveImagesWithoutOutput:
             "required": {
                 "images": ("IMAGE",),
                 "filename_prefix": ("STRING", {"default": "ComfyUI",
-                                               "tooltip": "要保存的文件的前缀。可以使用格式化信息，如%date:yyyy-MM-dd%或%Empty Latent Image.width%"}),
+                                               "tooltip": "要保存的文件的前缀。支持的占位符：%width% %height% %year% %month% %day% %hour% %minute% %second%"}),
                 "output_dir": ("STRING", {"default": "", "tooltip": "若为空，存放到output目录"}),
             },
             "optional": {

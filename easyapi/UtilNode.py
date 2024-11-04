@@ -609,6 +609,26 @@ class LoadJsonStrToList:
             return ([json],)
 
 
+class ConvertToJsonStr:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "obj": (any_type, {"forceInput": True}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("json_str",)
+    CATEGORY = "EasyApi/Utils"
+    FUNCTION = "to_json_str"
+    DESCRIPTION = "将任意对象序列化为json字符串"
+
+    def to_json_str(self, obj):
+        json = simplejson.dumps(obj, ignore_nan=True)
+        return (json,)
+
+
 class GetValueFromJsonObj:
     @classmethod
     def INPUT_TYPES(s):
@@ -798,7 +818,7 @@ class IsNoneOrEmptyOptional:
     RETURN_NAMES = ("any",)
     FUNCTION = "execute"
     CATEGORY = "EasyApi/Utils"
-    DESCRIPTION = "判断输入any是否为None、空列表、空字符串(trim后判断)、空字典，若为true，返回default的值，否则返回输入值"
+    DESCRIPTION = "判断输入any是否为None、空列表、空字符串(trim后判断)、空字典，若为true，返回default的值，否则返回输入值。受ComfyUI主体代码限制，经测试非字符串会报错"
 
     def execute(self, any=None, default=None):
         if any is None:
@@ -971,6 +991,7 @@ NODE_CLASS_MAPPINGS = {
     "ConvertTypeToAny": ConvertTypeToAny,
     "GetValueFromJsonObj": GetValueFromJsonObj,
     "LoadJsonStrToList": LoadJsonStrToList,
+    "ConvertToJsonStr": ConvertToJsonStr,
     "FilterValueForList": FilterValueForList,
     "LoadLocalFilePath": LoadLocalFilePath,
     "IsNoneOrEmpty": IsNoneOrEmpty,
@@ -1006,6 +1027,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ConvertTypeToAny": "ConvertTypeToAny",
     "GetValueFromJsonObj": "GetValueFromJsonObj",
     "LoadJsonStrToList": "LoadJsonStrToList",
+    "ConvertToJsonStr": "ConvertToJsonStr",
     "FilterValueForList": "FilterValueForList",
     "LoadLocalFilePath": "LoadLocalFilePath",
     "IsNoneOrEmpty": "IsNoneOrEmpty",

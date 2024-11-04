@@ -1,9 +1,9 @@
 [project]
 name = "comfyui-easyapi-nodes"
-description = "Provides some features and nodes related to API calls."
-version = "1.0.8"
+description = "Provides some features and nodes related to API calls. 开发独立应用调用ComfyUI服务的一些补充节点。"
+version = "1.0.9"
 license = { file = "LICENSE" }
-dependencies = ["segment_anything", "simple_lama_inpainting", "insightface"]
+dependencies = ["segment_anything", "simple_lama_inpainting", "insightface", "simplejson"]
 
 [project.urls]
 Repository = "https://github.com/lldacing/comfyui-easyapi-nodes"
