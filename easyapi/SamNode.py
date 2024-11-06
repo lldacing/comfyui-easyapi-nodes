@@ -229,7 +229,7 @@ class SamAutoMaskSEGS(SamAutoMaskSEGSAdvanced):
     # OUTPUT_IS_LIST = (False, False)
 
     def generate(self, sam_model, image, output_mode):
-        masks = super().generate(sam_model, image, output_mode)
+        masks = super().generate(sam_model, image, output_mode=output_mode)
         masksRle = json.JSONEncoder().encode(masks)
         return {"ui": {"segsRle": (masksRle,)}, "result": (masksRle,)}
 
