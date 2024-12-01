@@ -899,6 +899,70 @@ class SaveTextToFileByImagePath:
         return (txt_path,)
 
 
+class SaveTextToLocalFile:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "text_path": ("STRING", {"forceInput": False, "tooltip": "保存的文件全路径，不会自动创建文件目录"}),
+                "text": ("STRING", {"forceInput": False, "dynamicPrompts": False, "multiline": True}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text_path",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "把文本内容保存指定文件中"
+
+    def execute(self, text_path, text):
+        # 路径需要存在
+        dir_name = os.path.dirname(text_path)
+        if not os.path.isdir(dir_name):
+            raise FileNotFoundError(f"dir not found: {dir_name}")
+
+        # 写入文本内容到文件
+        with open(text_path, 'w', encoding='utf-8') as file:
+            file.write(text)
+
+        return (text_path,)
+
+
+class ReadTextFromLocalFile:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "text_path": ("STRING", {"forceInput": False}),
+            }
+        }
+
+    RETURN_TYPES = ("STRING",)
+    RETURN_NAMES = ("text",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "把文本内容保存到图片路径同名的txt文件中"
+
+    def execute(self, text_path):
+        if not os.path.isfile(text_path):
+            raise FileNotFoundError(f"file not found: {text_path}")
+
+            # 获取文件的 MIME 类型
+        mime_type, _ = mimetypes.guess_type(text_path)
+
+        if mime_type is None or (not mime_type.startswith('text/') and mime_type != 'application/json'):
+            raise ValueError(f"Unsupported file type: {mime_type}")
+
+        # 读取文本内容
+        try:
+            with open(text_path, 'r', encoding='utf-8') as file:
+                text = file.read()
+        except Exception as e:
+            raise ValueError(f"Error reading file: {e}")
+
+        return (text,)
+
+
 class CopyAndRenameFiles:
     @classmethod
     def INPUT_TYPES(s):
@@ -999,6 +1063,8 @@ NODE_CLASS_MAPPINGS = {
     "EmptyOutputNode": EmptyOutputNode,
     "SaveTextToFileByImagePath": SaveTextToFileByImagePath,
     "CopyAndRenameFiles": CopyAndRenameFiles,
+    "SaveTextToLocalFile": SaveTextToLocalFile,
+    "ReadTextFromLocalFile": ReadTextFromLocalFile,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -1035,4 +1101,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "EmptyOutputNode": "EmptyOutputNode",
     "SaveTextToFileByImagePath": "SaveTextToFileByImagePath",
     "CopyAndRenameFiles": "CopyAndRenameFiles",
+    "SaveTextToLocalFile": "SaveTextToLocalFile",
+    "ReadTextFromLocalFile": "ReadTextFromLocalFile",
 }

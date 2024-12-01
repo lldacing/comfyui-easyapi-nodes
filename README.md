@@ -83,6 +83,8 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | SaveSingleImageWithoutOutput | 保存单个图像到指定目录，不是输出类型节点，可用于循环批量跑图和作为惰性求值的前置节点                                                                                                                     |
 |     ×      | CropTargetSizeImageByBbox    | 以bbox区域中心向外裁剪指定宽高图片                                                                                                                                            |
 |     ×      | ConvertToJsonStr             | 序列化为json字符串                                                                                                                                                    |
+|     ×      | SaveTextToLocalFile          | 保存文本到本地文件                                                                                                                                                      |
+|     ×      | ReadTextFromLocalFile        | 从本地文件读取文本                                                                                                                                                      |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -96,6 +98,9 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
+### 2024-12-01 (v1.1.0)
+- 新增节点：SaveTextToLocalFile、 ReadTextFromLocalFile
+
 ### 2024-11-04 (v1.0.9)
 - 新增节点：SamAutoMaskSEGSAdvanced、 MaskToRle、 RleToMask、 ConvertToJsonStr
 

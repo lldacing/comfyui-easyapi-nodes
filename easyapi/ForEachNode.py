@@ -156,7 +156,7 @@ class InnerLoopClose:
         for i in range(NUM_FLOW_SOCKETS):
             key = "initial_value%d" % i
             new_open.set_input(key, kwargs.get(key, None))
-        my_clone = graph.lookup_node("Recurse" )
+        my_clone = graph.lookup_node("Recurse")
         result = map(lambda x: my_clone.out(x), range(NUM_FLOW_SOCKETS))
         return {
             "result": tuple(result),
@@ -204,6 +204,9 @@ class ForEachOpen:
     CATEGORY = "EasyApi/Logic"
 
     def for_loop_open(self, total, **kwargs):
+        if total is None or total <= 0:
+            raise ValueError("Total must be greater than 0.")
+
         graph = GraphBuilder()
 
         if "initial_value0" in kwargs:
