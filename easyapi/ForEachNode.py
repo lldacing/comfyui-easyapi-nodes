@@ -204,8 +204,6 @@ class ForEachOpen:
     CATEGORY = "EasyApi/Logic"
 
     def for_loop_open(self, total, **kwargs):
-        if total is None or total <= 0:
-            raise ValueError("Total must be greater than 0.")
 
         graph = GraphBuilder()
 
