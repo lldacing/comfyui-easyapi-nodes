@@ -1,3 +1,4 @@
+import gc
 import mimetypes
 import os
 import shutil
@@ -9,6 +10,7 @@ import torch
 import folder_paths
 from comfy.model_patcher import ModelPatcher
 import comfy.model_base
+import comfy.model_management as mm
 from .util import tensor_to_pil, hex_to_rgba, any_type
 
 
@@ -1030,6 +1032,30 @@ class CopyAndRenameFiles:
         return (save_directory, )
 
 
+class TryFreeMemory:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "a": (any_type, {"forceInput": True}),
+                "do_gc": ("BOOLEAN", {"default": False}),
+                "unload_models": ("BOOLEAN", {"default": False}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("a",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    def execute(self, a, do_gc, unload_models):
+        if unload_models:
+            mm.unload_all_models()
+        if do_gc:
+            # 因为comfyui有缓存机制，还取决于自定义节点是否及时删除引用，效果不大好
+            gc.collect()
+        return (a,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -1065,6 +1091,7 @@ NODE_CLASS_MAPPINGS = {
     "CopyAndRenameFiles": CopyAndRenameFiles,
     "SaveTextToLocalFile": SaveTextToLocalFile,
     "ReadTextFromLocalFile": ReadTextFromLocalFile,
+    "TryFreeMemory": TryFreeMemory,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -1103,4 +1130,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "CopyAndRenameFiles": "CopyAndRenameFiles",
     "SaveTextToLocalFile": "SaveTextToLocalFile",
     "ReadTextFromLocalFile": "ReadTextFromLocalFile",
+    "TryFreeMemory": "TryFreeMemory",
 }

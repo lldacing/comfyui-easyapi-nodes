@@ -85,6 +85,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | ConvertToJsonStr             | 序列化为json字符串                                                                                                                                                    |
 |     ×      | SaveTextToLocalFile          | 保存文本到本地文件                                                                                                                                                      |
 |     ×      | ReadTextFromLocalFile        | 从本地文件读取文本                                                                                                                                                      |
+|     ×      | TryFreeMemory                | 回收内（显）存                                                                                                                                                        |
 
 ### 示例
   ![save api extended](docs/example_note.png)
