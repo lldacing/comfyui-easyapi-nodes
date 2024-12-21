@@ -11,6 +11,7 @@ import folder_paths
 from comfy.model_patcher import ModelPatcher
 import comfy.model_base
 import comfy.model_management as mm
+from server import PromptServer
 from .util import tensor_to_pil, hex_to_rgba, any_type
 
 
@@ -1038,8 +1039,8 @@ class TryFreeMemory:
         return {
             "required": {
                 "a": (any_type, {"forceInput": True}),
-                "do_gc": ("BOOLEAN", {"default": False}),
-                "unload_models": ("BOOLEAN", {"default": False}),
+                "do_gc": ("BOOLEAN", {"default": False, "tooltip": "设置垃圾回收标志，不会立即执行垃圾回收，在本次流运行结束时ComfyUI主体会根据标识自动执行一次垃圾回收（相当于不会缓存结果）"}),
+                "unload_models": ("BOOLEAN", {"default": False, "tooltip": "释放显存中已经无效的模型，会立即执行一次"}),
             }
         }
 
@@ -1050,9 +1051,10 @@ class TryFreeMemory:
     def execute(self, a, do_gc, unload_models):
         if unload_models:
             mm.unload_all_models()
-        if do_gc:
-            # 因为comfyui有缓存机制，还取决于自定义节点是否及时删除引用，效果不大好
-            gc.collect()
+
+        PromptServer.instance.prompt_queue.set_flag("unload_models", unload_models)
+        PromptServer.instance.prompt_queue.set_flag("free_memory", do_gc)
+
         return (a,)
 
 
