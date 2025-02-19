@@ -75,7 +75,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | LoadImageFromLocalPath       | 根据图片全路径加载图片                                                                                                                                                    |
 |     ×      | LoadMaskFromLocalPath        | 根据遮罩全路径加载遮罩                                                                                                                                                    |
 |     ×      | IsNoneOrEmpty                | 判断是否为空或空字符串或空列表或空字典                                                                                                                                            |
-|     ×      | IsNoneOrEmptyOptional        | 为空时返回指定值(惰性求值)，否则返回原值。由于ComfyUI本体代码逻辑，非字符串会报错                                                                                                                  |
+|     ×      | IsNoneOrEmptyOptional        | 为空时返回指定值(惰性求值)，否则返回原值。                                                                                                                                         |
 |     √      | EmptyOutputNode              | 空的输出类型节点                                                                                                                                                       |
 |     ×      | SaveTextToFileByImagePath    | 保存文本到图片路径，以图片名作为文件名                                                                                                                                            |
 |     ×      | CopyAndRenameFiles           | 把某个目录下的文件复制到另一个目录并重命名，若目标目录为空值，则重命名原文件                                                                                                                         |
@@ -86,6 +86,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | SaveTextToLocalFile          | 保存文本到本地文件                                                                                                                                                      |
 |     ×      | ReadTextFromLocalFile        | 从本地文件读取文本                                                                                                                                                      |
 |     ×      | TryFreeMemory                | 回收内（显）存                                                                                                                                                        |
+|     ×      | IfElseForEmptyObject         | 可以对list类型进行判断                                                                                                                                                  |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -99,6 +100,8 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
+### 2025-02-19 (v1.1.1)
+- 新增节点：IsNoneOrEmptyOptional
 ### 2024-12-01 (v1.1.0)
 - 新增节点：SaveTextToLocalFile、 ReadTextFromLocalFile
 

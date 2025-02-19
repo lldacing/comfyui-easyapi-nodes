@@ -821,29 +821,55 @@ class IsNoneOrEmptyOptional:
     RETURN_NAMES = ("any",)
     FUNCTION = "execute"
     CATEGORY = "EasyApi/Utils"
-    DESCRIPTION = "判断输入any是否为None、空列表、空字符串(trim后判断)、空字典，若为true，返回default的值，否则返回输入值。受ComfyUI主体代码限制，经测试非字符串会报错"
+    DESCRIPTION = "判断输入any是否为None、空列表、空字符串(trim后判断)、空字典，若为true，返回default的值，否则返回输入值。"
+    INPUT_IS_LIST = True
+    OUTPUT_IS_LIST = (True,)
 
     def execute(self, any=None, default=None):
-        if any is None:
+        if any is None or len(any) == 0:
             return default,
-        if isinstance(any, (list, tuple)):
-            return (default if len(any) == 0 else any,)
-        if isinstance(any, str):
-            return (default if len(any.strip()) == 0 else any,)
-        if isinstance(any, dict):
-            return (default if len(any) == 0 else any,)
+        if isinstance(any[0], (list, tuple, dict)):
+            return (default if len(any[0]) == 0 else any,)
+        if isinstance(any[0], str):
+            return (default if len(any[0].strip()) == 0 else any,)
         return (any,)
 
     def check_lazy_status(self, any=None, default=None):
-        if any is None:
+        if any is None or len(any) == 0:
             return ["default"]
-        if isinstance(any, (list, tuple)):
-            return ["default"] if len(any) == 0 else ["any"]
-        if isinstance(any, str):
-            return ["default"] if len(any.strip()) == 0 else ["any"]
-        if isinstance(any, dict):
-            return ["default"] if len(any) == 0 else ["any"]
-        return ["any"]
+        if isinstance(any[0], (list, tuple, dict)):
+            return ["default"] if len(any[0]) == 0 else ["any"]
+        if isinstance(any[0], str):
+            return ["default"] if len(any[0].strip()) == 0 else ["any"]
+        return []
+
+
+class IfElseForEmptyObject:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {
+            "required": {
+                "boolean": ("BOOLEAN",),
+                "on_true": (any_type, {"lazy": True}),
+                "on_false": (any_type, {"lazy": True}),
+            },
+        }
+
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("any",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    INPUT_IS_LIST = True
+    OUTPUT_IS_LIST = (True,)
+
+    def check_lazy_status(self, boolean, on_true=None, on_false=None):
+        if boolean[0] and (on_true is None or len(on_true) == 0 or (not isinstance(on_true[0], (list, tuple, str, dict)) or len(on_true[0]) > 0)):
+            return ["on_true"]
+        if not boolean[0] and (on_false is None or len(on_false) == 0 or (not isinstance(on_false[0], (list, tuple, str, dict)) or len(on_false[0]) > 0)):
+            return ["on_false"]
+
+    def execute(self, boolean, on_true = None, on_false = None):
+        return on_true if boolean[0] else on_false,
 
 
 class EmptyOutputNode:
@@ -1094,6 +1120,7 @@ NODE_CLASS_MAPPINGS = {
     "SaveTextToLocalFile": SaveTextToLocalFile,
     "ReadTextFromLocalFile": ReadTextFromLocalFile,
     "TryFreeMemory": TryFreeMemory,
+    "IfElseForEmptyObject": IfElseForEmptyObject,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -1133,4 +1160,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "SaveTextToLocalFile": "SaveTextToLocalFile",
     "ReadTextFromLocalFile": "ReadTextFromLocalFile",
     "TryFreeMemory": "TryFreeMemory",
+    "IfElseForEmptyObject": "If Else For Empty Object",
 }
