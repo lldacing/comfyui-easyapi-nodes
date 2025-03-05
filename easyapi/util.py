@@ -54,11 +54,26 @@ def image_to_base64(pli_image, pnginfo=None):
 
 
 def read_image_from_url(image_url):
-    s = requests.Session()
-    s.keep_alive = False
-    response = s.get(image_url, verify=False)
-    img = Image.open(io.BytesIO(response.content))
-    return img
+    try:
+        # Create a new session and disable keep-alive if desired
+        session = requests.Session()
+        session.keep_alive = False
+
+        # Get the image content from the URL
+        response = session.get(image_url, stream=True, verify=False)
+        response.raise_for_status()  # Ensure we got a valid response
+
+        # Convert the response content into a BytesIO object
+        image_bytes = io.BytesIO(response.content)
+        
+        # Open the image using PIL and force loading the image data
+        img = Image.open(image_bytes)
+        img.load()  # Ensure the image is fully loaded
+        
+        return img
+    except Exception as e:
+        print(f"Error reading image from URL {image_url}: {e}")
+        return None
 
 
 def hex_to_rgba(hex_color):
