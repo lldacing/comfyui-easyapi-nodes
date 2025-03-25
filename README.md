@@ -87,6 +87,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | ReadTextFromLocalFile        | 从本地文件读取文本                                                                                                                                                      |
 |     ×      | TryFreeMemory                | 回收内（显）存                                                                                                                                                        |
 |     ×      | IfElseForEmptyObject         | 可以对list类型进行判断                                                                                                                                                  |
+|     ×      | ImageSizeGetter              | 获取图片尺寸（宽、高、最大边、最小边、批次）                                                                                                                                         |
 
 ### 示例
   ![save api extended](docs/example_note.png)

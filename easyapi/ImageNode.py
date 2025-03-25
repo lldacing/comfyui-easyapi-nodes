@@ -599,6 +599,31 @@ class SaveSingleImageWithoutOutput:
         return (None,)
 
 
+class ImageSizeGetter:
+    """
+    获取图片尺寸
+    """
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "required": {
+                "image": ("IMAGE",),
+            },
+        }
+
+    RETURN_TYPES = ("INT", "INT", "INT", "INT", "INT",)
+    RETURN_NAMES = ("width", "height", "max", "min", "batch",)
+    OUTPUT_TOOLTIPS = ("图片宽度", "图片高度", "最大边长度", "最小边长度", "批次数",)
+    FUNCTION = "get_size"
+    CATEGORY = "EasyApi/Image"
+    DESCRIPTION = "获取图片尺寸"
+    OUTPUT_NODE = False
+    def get_size(self, image):
+        width = image.shape[2]
+        height = image.shape[1]
+        return width, height, max(width, height), min(width, height), image.shape[0],
+
+
 NODE_CLASS_MAPPINGS = {
     "Base64ToImage": Base64ToImage,
     "LoadImageFromURL": LoadImageFromURL,
@@ -614,6 +639,7 @@ NODE_CLASS_MAPPINGS = {
     "LoadMaskFromLocalPath": LoadMaskFromLocalPath,
     "SaveImagesWithoutOutput": SaveImagesWithoutOutput,
     "SaveSingleImageWithoutOutput": SaveSingleImageWithoutOutput,
+    "ImageSizeGetter": ImageSizeGetter,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -632,4 +658,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "LoadMaskFromLocalPath": "Load Mask From Local Path",
     "SaveImagesWithoutOutput": "Save Images Without Output",
     "SaveSingleImageWithoutOutput": "Save Single Image Without Output",
+    "ImageSizeGetter": "Image Size Getter",
 }
