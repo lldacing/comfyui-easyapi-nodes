@@ -740,13 +740,14 @@ app.registerExtension({
                     if (index == 0) {
                         let num = parseInt(node.inputs[i].name.replace(input_name, ""))
                         if (num > 1) {
-                            node.removeInput(i)
+                            node.inputs.splice(i, 1);
                         }
                     }
                 }
                 for (let i = node.outputs.length - 1; i > out_fixed_num; i--) {
                     removeOutSoltAndLink(node, i);
                 }
+                node.setSize(node.computeSize());
             }
         }
     }
