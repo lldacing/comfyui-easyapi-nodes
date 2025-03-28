@@ -88,6 +88,8 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
 |     ×      | TryFreeMemory                | 回收内（显）存                                                                                                                                                        |
 |     ×      | IfElseForEmptyObject         | 可以对list类型进行判断                                                                                                                                                  |
 |     ×      | ImageSizeGetter              | 获取图片尺寸（宽、高、最大边、最小边、批次）                                                                                                                                         |
+|     ×      | FilterSortDependSubGraphs    | 使前置依赖子图按指定顺序执行（且只执行配置的前置依赖），如：配置filter_sort为1,4,3 表示按 depend_1 => depend_4 => depend_3 依次执行, 而depend_2不会被执行。                                                   |
+|     ×      | SortDependSubGraphs          | 使前置依赖子图按指定顺序执行（未配置的依赖输入项在指定项后按默认顺序执行），如：配置sort为1,4 表示先按 depend_1 => depend_4 依次执行, 然后depend_3和depend_2按默认顺序执行。                                                 |
 
 ### 示例
   ![save api extended](docs/example_note.png)
@@ -101,6 +103,10 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
+### 2025-03-28 (v1.1.2)
+- 新增节点 ImageSizeGetter、FilterSortDependSubGraphs、SortDependSubGraphs
+  ![依赖项拓扑顺序](docs/sort_subgraphs.gif)
+  ![依赖项拓扑过滤和顺序](docs/filter_sort_subgraphs.gif)
 ### 2025-02-19 (v1.1.1)
 - 新增节点：IsNoneOrEmptyOptional
 ### 2024-12-01 (v1.1.0)

@@ -12,7 +12,7 @@ from comfy.model_patcher import ModelPatcher
 import comfy.model_base
 import comfy.model_management as mm
 from server import PromptServer
-from .util import tensor_to_pil, hex_to_rgba, any_type
+from .util import hex_to_rgba, any_type, find_max_suffix_number
 
 
 class GetImageBatchSize:
@@ -178,10 +178,8 @@ class ListMerge:
     @classmethod
     def INPUT_TYPES(self):
         return {
-            "required": {
-                "list_a": ('LIST', {"forceInput": True}),
-            },
             "optional": {
+                "list_a": ('LIST', {"forceInput": True}),
                 "list_b": ('LIST', {"forceInput": True}),
             }
         }
@@ -193,9 +191,11 @@ class ListMerge:
     OUTPUT_NODE = False
     CATEGORY = "EasyApi/List"
 
-    DESCRIPTION = "合并两个列表。如 [1,2] 和 [3,4] => [1,2,3,4]"
+    DESCRIPTION = "合并两个列表。如 [1,2] 和 [3,4] => [1,2,3,4]， 都不存在时返回空列表"
 
-    def convert(self, list_a, list_b=None):
+    def convert(self, list_a=None, list_b=None):
+        if list_a is None:
+            list_a = []
         list = [] + list_a
         if list_b:
             list = list + list_b
@@ -416,10 +416,9 @@ class SDBaseVerNumber:
 class ListWrapper:
     @classmethod
     def INPUT_TYPES(self):
-        return {"required": {
-            "any_1": (any_type, {"forceInput": True}),
-        },
+        return {
             "optional": {
+                "any_1": (any_type, {"forceInput": True}),
                 "any_2": (any_type, {"forceInput": True}),
             },
         }
@@ -434,14 +433,16 @@ class ListWrapper:
 
     INPUT_IS_LIST = False
     OUTPUT_IS_LIST = (False, )
-    DESCRIPTION = "把输入放到一个列表中，如 [a,b]和[c] => [[a,b],[c]]"
+    DESCRIPTION = "把输入放到一个列表中，如 [a,b]和[c] => [[a,b],[c]]， 都不存在时返回None"
 
-    def wrapper(self, any_1, any_2=None):
-        if any_1 is None:
+    def wrapper(self, any_1=None, any_2=None):
+        if any_1 is None and any_2 is None:
             return None,
         else:
             if any_2 is None:
                 return ([any_1,],)
+            elif any_1 is None:
+                return ([any_2,],)
             else:
                 return ([any_1, any_2],)
 
@@ -598,18 +599,19 @@ class LoadJsonStrToList:
             }
         }
 
-    RETURN_TYPES = ("LIST",)
+    RETURN_TYPES = ("LIST", "INT", )
+    RETURN_NAMES = ("LIST", "length", )
     CATEGORY = "EasyApi/Utils"
     FUNCTION = "load_json"
 
     def load_json(self, json_str: str):
         if len(json_str.strip()) == 0:
-            return ([],)
+            return [], 0,
         json = simplejson.loads(json_str)
         if isinstance(json, (list, tuple)):
-            return (json,)
+            return json, len(json)
         else:
-            return ([json],)
+            return [json], 1
 
 
 class ConvertToJsonStr:
@@ -1084,6 +1086,103 @@ class TryFreeMemory:
         return (a,)
 
 
+NUM_FLOW_SOCKETS = 20
+class FilterSortDependSubGraphs:
+    def __init__(self):
+        self.count = 0
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "filter_sort": ("STRING", {"default": "1", "tooltip": "按顺序执行指定的前置依赖子图，为空时都不执行，返回结果都为None"
+                                                                        "\n如：1,4,3 表示按 depend_1 => depend_4 => depend_3 依次执行, 而depend_2不会被执行"}),
+            },
+            "optional": {
+                "depend_%d" % i: (any_type, {"lazy": True}) for i in range(1, NUM_FLOW_SOCKETS)
+            },
+        }
+
+    RETURN_TYPES = tuple([any_type] * (NUM_FLOW_SOCKETS - 1))
+    RETURN_NAMES = tuple(["value%d" % i for i in range(1, NUM_FLOW_SOCKETS)])
+    FUNCTION = "sort_graph"
+
+    CATEGORY = "EasyApi/Logic"
+    DESCRIPTION = ("使前置依赖子图按指定顺序执行（且只执行配置的前置依赖）\n"
+                   "如：配置filter_sort为1,4,3 表示按 depend_1 => depend_4 => depend_3 依次执行, 而depend_2不会被执行。")
+
+    def sort_graph(self, filter_sort, **kwargs):
+        self.count = 0
+        max_num = find_max_suffix_number(kwargs, "depend_")
+        indexes = [int(item.strip()) for item in filter_sort.split(",") if len(item.strip()) > 0]
+
+        outputs = [kwargs.get("depend_%d" % i, None)  if i in indexes else None for i in range(1, max_num + 1)]
+        return outputs
+
+    def check_lazy_status(self, filter_sort, **kwargs):
+        if filter_sort and len(filter_sort.strip()) > 0:
+            indexes = [int(item.strip()) for item in filter_sort.split(",") if "depend_%d" % int(item.strip()) in kwargs.keys()]
+            for i in indexes:
+                if self.count < len(indexes):
+                    index = indexes[self.count]
+                    input_name = "depend_%d" % index
+                    self.count += 1
+                    if kwargs.get(input_name, None) is None:
+                        # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
+                        return [input_name]
+                else:
+                    break
+
+
+class SortDependSubGraphs:
+    def __init__(self):
+        self.count = 0
+
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "sort": ("STRING", {"default": "", "tooltip": "按顺序执行指定的前置依赖子图，为空时按默认顺序执行"
+                                                                "\n如：1,4 表示先按 depend_1 => depend_4 依次执行, 而depend_3和depend_2按默认顺序执行"}),
+            },
+            "optional": {
+                "depend_%d" % i: (any_type, {"lazy": True}) for i in range(1, NUM_FLOW_SOCKETS)
+            },
+        }
+
+    RETURN_TYPES = tuple([any_type] * (NUM_FLOW_SOCKETS - 1))
+    RETURN_NAMES = tuple(["value%d" % i for i in range(1, NUM_FLOW_SOCKETS)])
+    FUNCTION = "sort_graph"
+
+    CATEGORY = "EasyApi/Logic"
+    DESCRIPTION = ("使前置依赖子图按指定顺序执行（未配置的依赖输入项在指定项后按默认顺序执行）"
+                   "\n如：配置sort为1,4 表示先按 depend_1 => depend_4 依次执行, 而depend_3和depend_2按默认顺序执行。")
+
+    def sort_graph(self, sort, **kwargs):
+        self.count = 0
+        max_num = find_max_suffix_number(kwargs, "depend_")
+
+        outputs = [kwargs.get("depend_%d" % i, None) for i in range(1, max_num + 1)]
+        return outputs
+
+    def check_lazy_status(self, sort, **kwargs):
+        if sort and len(sort.strip()) > 0:
+            indexes = [int(item.strip()) for item in sort.split(",") if "depend_%d" % int(item.strip()) in kwargs.keys()]
+            for i in indexes:
+                if self.count < len(indexes):
+                    index = indexes[self.count]
+                    input_name = "depend_%d" % index
+                    self.count += 1
+                    if kwargs.get(input_name, None) is None:
+                        # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
+                        return [input_name]
+
+            max_num = find_max_suffix_number(kwargs, "depend_")
+            return ["depend_%d" % j for j in range(1, max_num + 1)  if j not in indexes and "depend_%d" % j in kwargs.keys() and kwargs.get("depend_%d" % j, None) is None]
+        else:
+            return [i for i in kwargs.keys() if kwargs.get(i, None) is None]
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -1121,6 +1220,8 @@ NODE_CLASS_MAPPINGS = {
     "ReadTextFromLocalFile": ReadTextFromLocalFile,
     "TryFreeMemory": TryFreeMemory,
     "IfElseForEmptyObject": IfElseForEmptyObject,
+    "FilterSortDependSubGraphs": FilterSortDependSubGraphs,
+    "SortDependSubGraphs": SortDependSubGraphs,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -1161,4 +1262,6 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ReadTextFromLocalFile": "ReadTextFromLocalFile",
     "TryFreeMemory": "TryFreeMemory",
     "IfElseForEmptyObject": "If Else For Empty Object",
+    "FilterSortDependSubGraphs": "Filter And Sort Depend SubGraphs",
+    "SortDependSubGraphs": "Sort Depend SubGraphs",
 }

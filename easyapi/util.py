@@ -86,6 +86,22 @@ def hex_to_rgba(hex_color):
     return r, g, b, a
 
 
+def find_max_suffix_number(kwargs, substring):
+    # 提取所有键
+    keys = list(kwargs.keys())
+
+    # 筛选出形如 'initial_valueX' 的键
+    matching_keys = [key for key in keys if key.startswith(substring)]
+
+    # 从匹配的键中提取数字部分
+    numbers = [int(key[len(substring):]) for key in matching_keys]
+
+    # 找到最大数字
+    max_number = max(numbers) if numbers else 1
+
+    return max_number
+
+
 class AnyType(str):
   """A special class that is always equal in not equal comparisons. Credit to pythongosssss"""
 

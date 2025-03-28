@@ -591,19 +591,20 @@ function removeOutSoltAndLink(node, out_slot_i) {
 }
 
 
-let filter_node_type = ['ForEachOpen', 'ForEachClose']
-let output_fixed_num_for_filter_node_type = [3, 0]
+let filter_node_type = ['ForEachOpen', 'ForEachClose', 'SortDependSubGraphs', 'FilterSortDependSubGraphs']
+let output_fixed_num_for_filter_node_type = [3, 0, 0, 0]
+let filter_node_type_input_prefix = ['initial_value', 'initial_value', 'depend_', 'depend_']
 
 app.registerExtension({
     name: "Comfy.EasyApi.ForNode",
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
 
 		if (filter_node_type.indexOf(nodeData.name) > -1) {
-			let input_name = "initial_value";
+			let input_name = filter_node_type_input_prefix[filter_node_type.indexOf(nodeData.name)];
 			let output_name = "value";
             let fixed_head_input_names = ["flow_control"];
-            let fixed_tail_input_names = ["total"];
-            // 比py代码中定义少1，因为不含initial_value0
+            let fixed_tail_input_names = ["total", "filter_sort", 'sort'];
+            // 不含initial_value0
             let max_number_of_inputs = 19;
             let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(nodeData.name)];
 
@@ -643,15 +644,15 @@ app.registerExtension({
                     if (fixed_tail_input_names.indexOf(this.inputs[index].name) > -1 || fixed_head_input_names.indexOf(this.inputs[index].name) > -1)
                         return;
 
-                    if (this.inputs[0].type == '*') {
-                        const node = app.graph.getNodeById(link_info.origin_id);
-                        let origin_type = node.outputs[link_info.origin_slot].type;
-
-                        if (origin_type == '*') {
-                            this.disconnectInput(link_info.target_slot);
-                            return;
-                        }
-                    }
+                    // if (this.inputs[0].type == '*') {
+                    //     const node = app.graph.getNodeById(link_info.origin_id);
+                    //     let origin_type = node.outputs[link_info.origin_slot].type;
+                    //
+                    //     if (origin_type == '*') {
+                    //         this.disconnectInput(link_info.target_slot);
+                    //         return;
+                    //     }
+                    // }
 
                     let fixed_head_solts = this.inputs.filter(x => fixed_head_input_names.indexOf(x.name) > -1);
                     let fixed_head_solt_count = fixed_head_solts ? fixed_head_solts.length : 0;
@@ -731,10 +732,10 @@ app.registerExtension({
     async nodeCreated(node, app) {
         // Fires every time a node is constructed
         // You can modify widgets/add handlers/etc here
-        if (filter_node_type.indexOf(node.title) > -1) {
-            let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(node.title)];
+        if (filter_node_type.indexOf(node.comfyClass) > -1) {
+            let out_fixed_num = output_fixed_num_for_filter_node_type[filter_node_type.indexOf(node.comfyClass)];
             if (node.id == -1) {
-			    let input_name = "initial_value";
+			    let input_name = filter_node_type_input_prefix[filter_node_type.indexOf(node.comfyClass)];
                 for (let i = node.inputs.length - 1; i >= 0; i--) {
                     let index = node.inputs[i].name.indexOf(input_name);
                     if (index == 0) {

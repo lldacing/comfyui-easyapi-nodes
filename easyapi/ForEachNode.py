@@ -1,5 +1,5 @@
 from comfy_execution.graph_utils import GraphBuilder, is_link
-from .util import any_type
+from .util import any_type, find_max_suffix_number
 
 # 支持的最大参数个数
 NUM_FLOW_SOCKETS = 20
@@ -165,19 +165,7 @@ class InnerLoopClose:
 
 
 def find_max_initial_value_number(kwargs, substring):
-    # 提取所有键
-    keys = list(kwargs.keys())
-
-    # 筛选出形如 'initial_valueX' 的键
-    matching_keys = [key for key in keys if key.startswith('initial_value')]
-
-    # 从匹配的键中提取数字部分
-    numbers = [int(key[len('initial_value'):]) for key in matching_keys]
-
-    # 找到最大数字
-    max_number = max(numbers) if numbers else 1
-
-    return max_number
+    return find_max_suffix_number(kwargs, substring)
 
 
 class ForEachOpen:
