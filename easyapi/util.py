@@ -1,5 +1,8 @@
 import base64
 import io
+import json
+import os
+import time
 
 import numpy as np
 import requests
@@ -110,3 +113,46 @@ class AnyType(str):
 
 
 any_type = AnyType("*")
+
+
+global_config = os.path.join(os.path.dirname(os.path.realpath(__file__)), "../global.json")
+last_read_time = None
+
+def read_global_config():
+    config = {}
+    if os.path.exists(global_config):
+        with open(global_config, encoding='utf-8') as f:
+            config = json.load(f)
+
+    return config
+
+
+def get_global_config(key):
+    global last_read_time
+    global config
+    current_time = time.time()
+    if last_read_time is None or current_time - last_read_time >= 300:
+        config = read_global_config()
+        last_read_time = current_time
+
+    return config[key] if key in config else None
+
+
+def check_directory(check_dir):
+    """
+    如果不允许创建目录，检查目录是否存在，是不是绝对路经。
+    如果允许创建目录，尝试创建目录，并返回规范化路径。
+    Args:
+        check_dir:
+
+    Returns: 规范化后的路径
+
+    """
+    allow_create_dir_when_save = get_global_config('allow_create_dir_when_save')
+    check_dir = os.path.normpath(check_dir)
+    if not allow_create_dir_when_save and (not os.path.isdir(check_dir) or not os.path.isabs(check_dir)):
+        raise FileNotFoundError(f"dir not found: {check_dir}")
+
+    if not os.path.isdir(check_dir):
+        os.makedirs(check_dir, exist_ok=True)
+    return check_dir

@@ -12,7 +12,7 @@ from comfy.model_patcher import ModelPatcher
 import comfy.model_base
 import comfy.model_management as mm
 from server import PromptServer
-from .util import hex_to_rgba, any_type, find_max_suffix_number
+from .util import check_directory, hex_to_rgba, any_type, find_max_suffix_number
 
 
 class GetImageBatchSize:
@@ -935,7 +935,7 @@ class SaveTextToLocalFile:
     def INPUT_TYPES(s):
         return {
             "required": {
-                "text_path": ("STRING", {"forceInput": False, "tooltip": "保存的文件全路径，不会自动创建文件目录"}),
+                "text_path": ("STRING", {"forceInput": False, "tooltip": "保存的文件全路径，不会自动创建文件目录（可配置允许）"}),
                 "text": ("STRING", {"forceInput": False, "dynamicPrompts": False, "multiline": True}),
             }
         }
@@ -947,10 +947,7 @@ class SaveTextToLocalFile:
     DESCRIPTION = "把文本内容保存指定文件中"
 
     def execute(self, text_path, text):
-        # 路径需要存在
-        dir_name = os.path.dirname(text_path)
-        if not os.path.isdir(dir_name):
-            raise FileNotFoundError(f"dir not found: {dir_name}")
+        check_directory(os.path.dirname(text_path))
 
         # 写入文本内容到文件
         with open(text_path, 'w', encoding='utf-8') as file:
@@ -972,7 +969,7 @@ class ReadTextFromLocalFile:
     RETURN_NAMES = ("text",)
     FUNCTION = "execute"
     CATEGORY = "EasyApi/Utils"
-    DESCRIPTION = "把文本内容保存到图片路径同名的txt文件中"
+    DESCRIPTION = "从指定文件读取文本内容"
 
     def execute(self, text_path):
         if not os.path.isfile(text_path):
@@ -1000,7 +997,7 @@ class CopyAndRenameFiles:
         return {
             "required": {
                 "directory": ("STRING", {"forceInput": False, "tooltip": "源目录"}),
-                "save_directory": ("STRING", {"default": "", "tooltip": "目标目录，为空时重命名原文件"}),
+                "save_directory": ("STRING", {"default": "", "tooltip": "目标目录（全路径），不自动创建目录（可配置允许），为空时重命名原文件"}),
                 "prefix": ("STRING", {"default": "", "tooltip": "新文件名前缀"}),
                 "name_to_num": ("BOOLEAN", {"default": True, "tooltip": "后缀是否使用在对应目录的序号"}),
             }
@@ -1024,6 +1021,9 @@ class CopyAndRenameFiles:
         """
         count_dict = defaultdict(int)  # 用于存储每个目录的计数器
 
+        is_abs_path = save_directory and len(save_directory.strip()) > 0
+        save_directory = check_directory(save_directory.strip()) if is_abs_path else save_directory.strip()
+
         for root, _, files in os.walk(directory):
             for filename in files:
                 old_path = os.path.join(root, filename)
@@ -1043,10 +1043,10 @@ class CopyAndRenameFiles:
                             new_filename = filename
 
                     # 如果 save_directory 不为空，复制并重命名到目标目录，并保持层级结构
-                    if save_directory and len(save_directory.strip()) > 0:
+                    if is_abs_path:
                         # 计算保存文件的目标目录
                         relative_path = os.path.relpath(root, directory)
-                        target_dir = os.path.join(save_directory, relative_path)
+                        target_dir = os.path.join(save_directory, str(relative_path))
                         if not os.path.exists(target_dir):
                             os.makedirs(target_dir)
                         new_path = os.path.join(target_dir, new_filename)

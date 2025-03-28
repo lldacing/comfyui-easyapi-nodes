@@ -14,7 +14,7 @@ from comfy.cli_args import args
 from PIL.PngImagePlugin import PngInfo
 import json
 from json import JSONEncoder, JSONDecoder
-from .util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url
+from .util import tensor_to_pil, pil_to_tensor, base64_to_image, image_to_base64, read_image_from_url, check_directory
 
 
 class LoadImageFromURL:
@@ -462,7 +462,7 @@ class SaveImagesWithoutOutput:
                 "images": ("IMAGE",),
                 "filename_prefix": ("STRING", {"default": "ComfyUI",
                                                "tooltip": "要保存的文件的前缀。支持的占位符：%width% %height% %year% %month% %day% %hour% %minute% %second%"}),
-                "output_dir": ("STRING", {"default": "", "tooltip": "若为空，存放到output目录"}),
+                "output_dir": ("STRING", {"default": "", "tooltip": "目标目录(绝对路径)，不会自动创建（可配置允许），若为空，存放到output目录"}),
             },
             "optional": {
                 "addMetadata": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
@@ -478,7 +478,7 @@ class SaveImagesWithoutOutput:
 
     CATEGORY = "EasyApi/Image"
 
-    DESCRIPTION = "保存图像到指定目录，可根据返回的文件路径进行后续操作，此节点为非输出节点，适合批量处理和用于惰性求值的前置节点"
+    DESCRIPTION = "保存图像到指定目录，不自动创建目标目录（可配置允许），可根据返回的文件路径进行后续操作，此节点为非输出节点，适合批量处理和用于惰性求值的前置节点"
     OUTPUT_NODE = False
 
     def save_images(self, images, output_dir, filename_prefix="ComfyUI", addMetadata=False, prompt=None, extra_pnginfo=None):
@@ -490,6 +490,8 @@ class SaveImagesWithoutOutput:
 
         if output_dir is None or len(output_dir.strip()) == 0:
             output_dir = folder_paths.get_output_directory()
+
+        output_dir = check_directory(output_dir)
 
         results = list()
         for (index, images) in enumerate(imageList):
@@ -531,7 +533,7 @@ class SaveSingleImageWithoutOutput:
                 "image": ("IMAGE",),
                 "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "要保存的文件的前缀。可以使用格式化信息，如%date:yyyy-MM-dd%或%Empty Latent Image.width%"}),
                 "full_file_name": ("STRING", {"default": "", "tooltip": "完整的相对路径文件名，包括扩展名。若为空，则使用filename_prefix生成带序号的文件名"}),
-                "output_dir": ("STRING", {"default": "", "tooltip": "目标目录(绝对路径)，不会自动创建。若为空，存放到output目录"}),
+                "output_dir": ("STRING", {"default": "", "tooltip": "目标目录(绝对路径)，不会自动创建（可配置允许）。若为空，存放到output目录"}),
             },
             "optional": {
                 "addMetadata": ("BOOLEAN", {"default": False, "label_on": "True", "label_off": "False"}),
@@ -559,8 +561,7 @@ class SaveSingleImageWithoutOutput:
         if output_dir is None or len(output_dir.strip()) == 0:
             output_dir = folder_paths.get_output_directory()
 
-        if not os.path.isdir(output_dir) or not os.path.isabs(output_dir):
-            raise RuntimeError(f"目录 {output_dir} 不存在")
+        output_dir = check_directory(output_dir)
 
         if len(imageList) > 0:
             image = imageList[0]

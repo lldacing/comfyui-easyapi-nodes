@@ -103,7 +103,8 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
-### 2025-03-28 (v1.1.2)
+### 2025-03-28 (v1.1.3)
+- 新增配置项 `allow_create_dir_when_save` 控制保存文本和图像时是否自动创建目录
 - 新增节点 ImageSizeGetter、FilterSortDependSubGraphs、SortDependSubGraphs
   ![依赖项拓扑顺序](docs/sort_subgraphs.gif)
   ![依赖项拓扑过滤和顺序](docs/filter_sort_subgraphs.gif)
