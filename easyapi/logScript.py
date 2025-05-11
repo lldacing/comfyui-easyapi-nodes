@@ -18,8 +18,10 @@ class StdTimeFilter:
         if message == '\n':
             if self.is_stdout:
                 old_stdout.write(message)
+                old_stdout.flush()
             else:
                 old_stderr.write(message)
+                old_stderr.flush()
             self.newline = True
         elif self.newline:
             if self.is_stdout:
