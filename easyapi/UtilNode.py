@@ -779,6 +779,18 @@ class LoadLocalFilePath:
 
         return image_paths, len(image_paths), relative_image_paths, directory,
 
+class NoneNode:
+    @classmethod
+    def INPUT_TYPES(s):
+        return {}
+    RETURN_TYPES = (any_type,)
+    RETURN_NAMES = ("none",)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "判断输入是否为None、空列表、空字符串(trim后判断)、空字典"
+
+    def execute(self):
+        return None,
 
 class IsNoneOrEmpty:
     @classmethod
@@ -828,7 +840,7 @@ class IsNoneOrEmptyOptional:
     OUTPUT_IS_LIST = (True,)
 
     def execute(self, any=None, default=None):
-        if any is None or len(any) == 0:
+        if any is None or len(any) == 0 or any[0] is None:
             return default,
         if isinstance(any[0], (list, tuple, dict)):
             return (default if len(any[0]) == 0 else any,)
@@ -837,7 +849,7 @@ class IsNoneOrEmptyOptional:
         return (any,)
 
     def check_lazy_status(self, any=None, default=None):
-        if any is None or len(any) == 0:
+        if any is None or len(any) == 0 or any[0] is None:
             return ["default"]
         if isinstance(any[0], (list, tuple, dict)):
             return ["default"] if len(any[0]) == 0 else ["any"]
@@ -1211,6 +1223,7 @@ NODE_CLASS_MAPPINGS = {
     "ConvertToJsonStr": ConvertToJsonStr,
     "FilterValueForList": FilterValueForList,
     "LoadLocalFilePath": LoadLocalFilePath,
+    "NoneNode": NoneNode,
     "IsNoneOrEmpty": IsNoneOrEmpty,
     "IsNoneOrEmptyOptional": IsNoneOrEmptyOptional,
     "EmptyOutputNode": EmptyOutputNode,
@@ -1253,6 +1266,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "ConvertToJsonStr": "ConvertToJsonStr",
     "FilterValueForList": "FilterValueForList",
     "LoadLocalFilePath": "LoadLocalFilePath",
+    "NoneNode": "NoneNode",
     "IsNoneOrEmpty": "IsNoneOrEmpty",
     "IsNoneOrEmptyOptional": "IsNoneOrEmptyOptional",
     "EmptyOutputNode": "EmptyOutputNode",
