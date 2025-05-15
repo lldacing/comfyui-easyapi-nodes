@@ -787,7 +787,7 @@ class NoneNode:
     RETURN_NAMES = ("none",)
     FUNCTION = "execute"
     CATEGORY = "EasyApi/Utils"
-    DESCRIPTION = "判断输入是否为None、空列表、空字符串(trim后判断)、空字典"
+    DESCRIPTION = "空节点"
 
     def execute(self):
         return None,
@@ -1100,9 +1100,6 @@ class TryFreeMemory:
 
 NUM_FLOW_SOCKETS = 20
 class FilterSortDependSubGraphs:
-    def __init__(self):
-        self.count = 0
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -1124,7 +1121,6 @@ class FilterSortDependSubGraphs:
                    "如：配置filter_sort为1,4,3 表示按 depend_1 => depend_4 => depend_3 依次执行, 而depend_2不会被执行。")
 
     def sort_graph(self, filter_sort, **kwargs):
-        self.count = 0
         max_num = find_max_suffix_number(kwargs, "depend_")
         indexes = [int(item.strip()) for item in filter_sort.split(",") if len(item.strip()) > 0]
 
@@ -1134,22 +1130,14 @@ class FilterSortDependSubGraphs:
     def check_lazy_status(self, filter_sort, **kwargs):
         if filter_sort and len(filter_sort.strip()) > 0:
             indexes = [int(item.strip()) for item in filter_sort.split(",") if "depend_%d" % int(item.strip()) in kwargs.keys()]
-            for i in indexes:
-                if self.count < len(indexes):
-                    index = indexes[self.count]
-                    input_name = "depend_%d" % index
-                    self.count += 1
-                    if kwargs.get(input_name, None) is None:
-                        # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
-                        return [input_name]
-                else:
-                    break
+            for index in indexes:
+                input_name = "depend_%d" % index
+                if kwargs.get(input_name, None) is None:
+                    # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
+                    return [input_name]
 
 
 class SortDependSubGraphs:
-    def __init__(self):
-        self.count = 0
-
     @classmethod
     def INPUT_TYPES(cls):
         return {
@@ -1171,7 +1159,6 @@ class SortDependSubGraphs:
                    "\n如：配置sort为1,4 表示先按 depend_1 => depend_4 依次执行, 而depend_3和depend_2按默认顺序执行。")
 
     def sort_graph(self, sort, **kwargs):
-        self.count = 0
         max_num = find_max_suffix_number(kwargs, "depend_")
 
         outputs = [kwargs.get("depend_%d" % i, None) for i in range(1, max_num + 1)]
@@ -1180,14 +1167,11 @@ class SortDependSubGraphs:
     def check_lazy_status(self, sort, **kwargs):
         if sort and len(sort.strip()) > 0:
             indexes = [int(item.strip()) for item in sort.split(",") if "depend_%d" % int(item.strip()) in kwargs.keys()]
-            for i in indexes:
-                if self.count < len(indexes):
-                    index = indexes[self.count]
-                    input_name = "depend_%d" % index
-                    self.count += 1
-                    if kwargs.get(input_name, None) is None:
-                        # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
-                        return [input_name]
+            for index in indexes:
+                input_name = "depend_%d" % index
+                if kwargs.get(input_name, None) is None:
+                    # 找到没有缓存的输入项，解决靠后的依赖节点变化后没有被执行的问题
+                    return [input_name]
 
             max_num = find_max_suffix_number(kwargs, "depend_")
             return ["depend_%d" % j for j in range(1, max_num + 1)  if j not in indexes and "depend_%d" % j in kwargs.keys() and kwargs.get("depend_%d" % j, None) is None]
