@@ -1179,6 +1179,26 @@ class SortDependSubGraphs:
             return [i for i in kwargs.keys() if kwargs.get(i, None) is None]
 
 
+class NodeListToList:
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {
+            "required": {
+                "lst": (any_type, {"forceInput": True})
+            },
+        }
+
+    INPUT_IS_LIST = True
+    RETURN_NAMES = ("lst",)
+    RETURN_TYPES = (any_type,)
+    FUNCTION = "execute"
+    CATEGORY = "EasyApi/Utils"
+    DESCRIPTION = "将节点列表类型输入转为普通列表"
+
+    def execute(self, list):
+        return (list,)
+
+
 NODE_CLASS_MAPPINGS = {
     "GetImageBatchSize": GetImageBatchSize,
     "JoinList": JoinList,
@@ -1219,6 +1239,7 @@ NODE_CLASS_MAPPINGS = {
     "IfElseForEmptyObject": IfElseForEmptyObject,
     "FilterSortDependSubGraphs": FilterSortDependSubGraphs,
     "SortDependSubGraphs": SortDependSubGraphs,
+    "NodeListToList": NodeListToList,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
@@ -1262,4 +1283,5 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "IfElseForEmptyObject": "If Else For Empty Object",
     "FilterSortDependSubGraphs": "Filter And Sort Depend SubGraphs",
     "SortDependSubGraphs": "Sort Depend SubGraphs",
+    "NodeListToList": "NodeListToList",
 }
