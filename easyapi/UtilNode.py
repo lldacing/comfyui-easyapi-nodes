@@ -1195,8 +1195,8 @@ class NodeListToList:
     CATEGORY = "EasyApi/Utils"
     DESCRIPTION = "将节点列表类型输入转为普通列表"
 
-    def execute(self, list):
-        return (list,)
+    def execute(self, lst):
+        return (lst,)
 
 
 NODE_CLASS_MAPPINGS = {

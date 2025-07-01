@@ -105,7 +105,7 @@ Tips: base64格式字符串比较长，会导致界面卡顿，接口请求带�
   ![批量裁剪打标](example/example_image_crop_tag.png)
 
 ## 更新记录
-### 2025-06-30 (v1.1.6)
+### 2025-06-30 (v1.1.7)
 - 新增节点：NodeListToList
 ### 2025-05-15 (v1.1.5)
 - Fix: FilterSortDependSubGraphs和SortDependSubGraphs前置节点运行异常后，再次提交任务，前置节点没有被执行
