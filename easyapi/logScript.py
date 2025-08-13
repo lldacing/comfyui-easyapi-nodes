@@ -41,6 +41,9 @@ class StdTimeFilter:
         else:
             old_stderr.flush()
 
+    def isatty(self):
+        return sys.__stdout__.isatty()
+
 
 def socket_wrap(func):
     def wrap_func(event, data, sid=None):
