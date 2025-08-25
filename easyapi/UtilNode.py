@@ -202,6 +202,79 @@ class ListMerge:
         return (list,)
 
 
+class NodeListToListMerge:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "optional": {
+                "list_a": (any_type, {"forceInput": True}),
+                "list_b": (any_type, {"forceInput": True}),
+                "list_c": (any_type, {"forceInput": True}),
+                "list_d": (any_type, {"forceInput": True}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    INPUT_IS_LIST = True
+    FUNCTION = "convert"
+
+    OUTPUT_NODE = False
+    CATEGORY = "EasyApi/List"
+
+    DESCRIPTION = "合并两个图片列表。如 [a,b] 和 [c,d] => [a,b,c,d]， 都不存在时返回空列表"
+
+    def convert(self, list_a=None, list_b=None, list_c=None, list_d=None):
+        if list_a is None:
+            list_a = []
+        out = [] + list_a
+        if list_b:
+            out = out + list_b
+
+        if list_c:
+            out = out + list_c
+
+        if list_d:
+            out = out + list_d
+        return (out,)
+
+
+class NodeListMerge:
+    @classmethod
+    def INPUT_TYPES(self):
+        return {
+            "optional": {
+                "list_a": (any_type, {"forceInput": True}),
+                "list_b": (any_type, {"forceInput": True}),
+                "list_c": (any_type, {"forceInput": True}),
+                "list_d": (any_type, {"forceInput": True}),
+            }
+        }
+
+    RETURN_TYPES = (any_type,)
+    INPUT_IS_LIST = True
+    FUNCTION = "convert"
+
+    OUTPUT_NODE = False
+    CATEGORY = "EasyApi/List"
+    OUTPUT_IS_LIST = (True,)
+
+    DESCRIPTION = "合并两个图片列表。如 [a,b] 和 [c,d] => [a,b,c,d]， 都不存在时返回空列表"
+
+    def convert(self, list_a=None, list_b=None, list_c=None, list_d=None):
+        if list_a is None:
+            list_a = []
+        out = [] + list_a
+        if list_b:
+            out = out + list_b
+
+        if list_c:
+            out = out + list_c
+
+        if list_d:
+            out = out + list_d
+        return (out,)
+
+
 class ShowString:
     @classmethod
     def INPUT_TYPES(self):
@@ -1240,12 +1313,14 @@ NODE_CLASS_MAPPINGS = {
     "FilterSortDependSubGraphs": FilterSortDependSubGraphs,
     "SortDependSubGraphs": SortDependSubGraphs,
     "NodeListToList": NodeListToList,
+    "NodeListToListMerge": NodeListToListMerge,
+    "NodeListMerge": NodeListMerge,
 }
 
 # A dictionary that contains the friendly/humanly readable titles for the nodes
 NODE_DISPLAY_NAME_MAPPINGS = {
     "GetImageBatchSize": "GetImageBatchSize",
-    "JoinList": "Join List",
+    "JoinList": "Join String List",
     "IntToNumber": "Int To Number",
     "StringToList": "String To List",
     "IntToList": "Int To List",
@@ -1283,5 +1358,7 @@ NODE_DISPLAY_NAME_MAPPINGS = {
     "IfElseForEmptyObject": "If Else For Empty Object",
     "FilterSortDependSubGraphs": "Filter And Sort Depend SubGraphs",
     "SortDependSubGraphs": "Sort Depend SubGraphs",
-    "NodeListToList": "NodeListToList",
+    "NodeListToList": "Node List To List",
+    "NodeListToListMerge": "Merge Node List To List",
+    "NodeListMerge": "Merge Node List",
 }
