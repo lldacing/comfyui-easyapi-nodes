@@ -170,11 +170,12 @@ def replace_mirror_url():
                 kwargs['str_or_url'] = u.geturl()
         elif len(args) >= 3:
             url = args[2]
-            found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
-            if found:
-                new_updater = list(args)
-                new_updater[2] = u.geturl()
-                args = tuple(new_updater)
+            if isinstance(url, str):
+                found, u, user_agent = replace_url(url, Mirror.DOWN_MODEL)
+                if found:
+                    new_updater = list(args)
+                    new_updater[2] = u.geturl()
+                    args = tuple(new_updater)
 
         return origin_async_request.__call__(*args, **kwargs)
 
